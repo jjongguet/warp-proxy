@@ -1,7 +1,7 @@
 # warp-proxy
 
 Warp/Oz CLI를 OpenAI-compatible + Anthropic-compatible HTTP endpoint로 재노출하는 **로컬 companion proxy** 프로젝트다.
-이미 로그인된 Oz CLI 세션을 재사용해, 로컬에서 Oz를 OpenAI-style/Anthropic-style 클라이언트(Open WebUI, Continue, Claude Code, curl, 간단한 스크립트)와 연결할 수 있게 만든다.
+이미 로그인된 Oz CLI 세션을 재사용해, 로컬에서 Oz를 OpenAI-style/Anthropic-style 클라이언트(Open WebUI, Continue, Codex CLI, Claude Code, curl, 간단한 스크립트)와 연결할 수 있게 만든다.
 
 - **현재 상태:** 구현 완료, local-only 지원 유지
 - **현재 기준 문서:** `docs/API_CONTRACT.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/USAGE.md`
@@ -282,6 +282,24 @@ curl http://127.0.0.1:29113/v1/chat/completions \
 ### Claude Code (Anthropic gateway mode)
 - `ANTHROPIC_BASE_URL=http://127.0.0.1:29113`
 - model을 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`로 설정
+
+### 빠른 CLI 점검 (codex / claude)
+
+Codex:
+
+```bash
+export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
+export OPENAI_API_KEY=dummy-local
+codex -p "Reply with READY."
+```
+
+Claude Code:
+
+```bash
+export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
+export ANTHROPIC_AUTH_TOKEN=dummy-local
+claude -p "Reply with READY."
+```
 
 보다 자세한 예시는 `docs/USAGE.md` 참고.
 CLIProxyAPI에 연결하려면 `docs/CLIPROXYAPI.md` 참고.

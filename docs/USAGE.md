@@ -1,6 +1,6 @@
 # Usage Guide
 - **Last updated:** 2026-03-09
-- **Scope:** 실제 실행 방법, OpenAI/Anthropic 요청 예시, Open WebUI/Continue/Claude Code 연결 예시
+- **Scope:** 실제 실행 방법, OpenAI/Anthropic 요청 예시, Open WebUI/Continue/Codex/Claude Code 연결 예시
 - **Applies to:** 현재 local-only 구현
 - **Reading note:** 동작 차이가 의심되면 `docs/API_CONTRACT.md`와 `docs/IMPLEMENTATION_STATUS.md`를 우선 확인한다.
 ## 1. 5-line quick start
@@ -159,12 +159,24 @@ Claude Code gateway mode에서는 Anthropic-compatible endpoint를 사용한다.
 export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
 ```
 설정 파일에서 기본 모델을 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`로 지정해 사용할 수 있다.
+### 7.1 빠른 실행 확인
+```bash
+export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
+export ANTHROPIC_AUTH_TOKEN=dummy-local
+claude -p "Reply with READY."
+```
 ## 8. Codex CLI 연결
 Codex는 OpenAI Responses API 경로를 사용하므로 `/v1` 베이스 URL을 지정한다.
 ```bash
 export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
 ```
 설정에서 모델은 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`를 사용한다.
+### 8.1 빠른 실행 확인
+```bash
+export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
+export OPENAI_API_KEY=dummy-local
+codex -p "Reply with READY."
+```
 ## 9. 처음 추천 모델
 처음엔 아래 순서로 써보는 걸 추천한다.
 1. `warp-oz-cli`
@@ -181,9 +193,11 @@ export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
 ### Claude Code에서 gateway 호출이 안 된다
 - `ANTHROPIC_BASE_URL`가 `http://127.0.0.1:29113`인지 확인
 - `POST /v1/messages`가 200을 반환하는지 curl로 먼저 확인
+- `ANTHROPIC_AUTH_TOKEN`를 설정했는지 확인
 ### Codex에서 provider 호출이 안 된다
 - `OPENAI_BASE_URL`가 `http://127.0.0.1:29113/v1`인지 확인
 - `POST /v1/responses`가 200을 반환하는지 curl로 먼저 확인
+- `OPENAI_API_KEY`를 설정했는지 확인
 ## 11. 참고 링크
 - Continue OpenAI-compatible config:
   - https://docs.continue.dev/customize/model-providers/top-level/openai
