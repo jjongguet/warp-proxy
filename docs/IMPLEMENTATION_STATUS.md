@@ -60,7 +60,7 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - `type=agent` text extraction
 - `conversation_started` / `conversation_id` capture
 
-> Cloud backend(`oz agent run-cloud`)은 제거됨. 자세한 내용은 [`docs/CLOUD_REMOVED.md`](./CLOUD_REMOVED.md) 참조.
+> Cloud backend (`oz agent run-cloud`) has been removed. See [`docs/CLOUD_REMOVED.md`](./CLOUD_REMOVED.md) for details.
 
 ## Verification snapshot
 
@@ -72,8 +72,8 @@ Verified successfully:
 ## Remaining caveats
 
 1. `/admin/status` remains alias-only even though `/v1/models` can expose additive namespaced passthrough ids.
-2. Oz CLI는 토큰 사용량을 반환하지 않으므로 `usage` 필드는 항상 0이다.
+2. The Oz CLI does not return token usage, so the `usage` field is always 0.
 
 ## Practical status
 
-For the original goal — “로컬에서 Oz를 HTTP API 서버처럼 띄워서 쓴다” — the project is now in a usable implemented state.
+For the original goal — “run Oz as a local HTTP API server” — the project is now in a usable implemented state.
