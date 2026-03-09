@@ -26,7 +26,7 @@ def get_app_version() -> str:
         return DEFAULT_APP_VERSION
 
 
-@dataclass(slots=True)
+@dataclass
 class Settings:
     """서버 런타임 설정. 환경변수 또는 직접 생성으로 초기화한다."""
 
