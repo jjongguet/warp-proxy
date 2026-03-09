@@ -2,6 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **대상:** CLIProxyAPI v5+ (`openai-compatibility` 지원 버전)
+- **Applies to:** 현재 local-only `warptocli`를 OpenAI-compatible upstream으로 붙이는 구성
 
 ## 개요
 

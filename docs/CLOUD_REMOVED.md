@@ -1,6 +1,7 @@
 # Cloud Backend 제거 안내
 
 - **제거일:** 2026-03-09
+- **문서 성격:** historical migration note — 현재 지원 계약 문서는 아니다. 현재 truth는 `docs/API_CONTRACT.md`와 `docs/IMPLEMENTATION_STATUS.md`.
 - **이유:** `oz agent run-cloud`는 CLI에 존재하지만, warptocli에서 실질적으로 활용되지 않음. cloud 모드를 사용하려면 `WARP_PROXY_ENABLE_CLOUD=true` + `WARP_PROXY_ENVIRONMENT` 설정이 필요하며, 대부분의 사용자에게는 불필요한 복잡성만 추가함.
 
 ## 제거된 항목

@@ -9,6 +9,31 @@ Warp/Oz CLI를 OpenAI-compatible HTTP endpoint로 재노출하는 **로컬 compa
 
 ---
 
+## 한눈에 보기
+
+- **Bind:** `127.0.0.1` only
+- **Primary backend:** `oz agent run`
+- **Primary model:** `warp-oz-cli`
+- **Main endpoints:** `GET /v1/models`, `POST /v1/chat/completions`, `GET /admin/status`
+
+---
+
+## 추천 읽기 순서
+
+### 지금 바로 필요한 문서
+1. [`docs/API_CONTRACT.md`](./docs/API_CONTRACT.md) — 현재 지원하는 HTTP 계약의 source of truth
+2. [`docs/USAGE.md`](./docs/USAGE.md) — 실제 실행/연결 방법
+3. [`docs/IMPLEMENTATION_STATUS.md`](./docs/IMPLEMENTATION_STATUS.md) — 현재 구현 범위와 검증 상태
+4. [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — 왜 이렇게 설계되었는지
+
+### 배경/역사 문서
+- [`docs/DECISIONS.md`](./docs/DECISIONS.md) — 현재 ADR과 설계 선택
+- [`docs/EVIDENCE.md`](./docs/EVIDENCE.md) — 검증 근거와 조사 결과
+- [`docs/CLOUD_REMOVED.md`](./docs/CLOUD_REMOVED.md) — 제거된 cloud backend 배경
+- [`PRD.md`](./PRD.md) — 초기 기획 초안(현재 계약 문서는 아님)
+
+---
+
 ## 이 프로젝트가 하는 일
 
 바깥에서는 보통 OpenAI API처럼:
@@ -34,11 +59,11 @@ OpenAI-compatible client
 
 ## 현재 지원하는 표면
 
-### Public API
+### 공개 API
 - `GET /v1/models`
 - `POST /v1/chat/completions`
 
-### Operator API
+### 운영용 API
 - `GET /admin/status`
 
 ### 구현된 동작
@@ -118,7 +143,7 @@ curl http://127.0.0.1:29113/v1/chat/completions \
 
 ## 요청 예시
 
-### Non-streaming
+### Non-streaming 요청
 
 ```bash
 curl http://127.0.0.1:29113/v1/chat/completions \
@@ -134,7 +159,7 @@ curl http://127.0.0.1:29113/v1/chat/completions \
 
 프록시는 `messages`를 flatten한 뒤 `oz agent run --output-format json` 기반으로 처리한다.
 
-### Streaming / SSE
+### Streaming / SSE 요청
 
 ```bash
 curl -N http://127.0.0.1:29113/v1/chat/completions \
@@ -154,7 +179,7 @@ curl -N http://127.0.0.1:29113/v1/chat/completions \
 - 마지막 성공 chunk: `finish_reason=stop`
 - 종료 sentinel: `data: [DONE]`
 
-### Continuation
+### Continuation(이어가기)
 
 첫 요청:
 

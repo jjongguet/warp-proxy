@@ -2,6 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **Status:** Canonical contract — cloud backend removed
+- **Authority:** 현재 구현과 충돌하는 문서가 있으면 이 문서를 우선한다. 구현 범위 자체는 `docs/IMPLEMENTATION_STATUS.md`를 함께 본다.
 
 ## 1. Endpoints
 
