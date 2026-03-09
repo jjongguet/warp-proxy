@@ -2,7 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **Status:** Phase 2 implemented and evidenced
-- **Authority note:** 현재 동작 계약은 `docs/API_CONTRACT.md`, 실제 구현 범위와 검증 스냅샷은 이 문서를 우선한다.
+- **Authority note:** See [`docs/README.md`](./README.md) for the document authority chain. This file tracks implemented features and verification.
 
 ## What exists now
 

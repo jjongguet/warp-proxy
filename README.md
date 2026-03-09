@@ -1,61 +1,200 @@
 # warp-proxy
 
-Warp/Oz CLI를 OpenAI-compatible + Anthropic-compatible HTTP endpoint로 재노출하는 **로컬 companion proxy** 프로젝트다.
-이미 로그인된 Oz CLI 세션을 재사용해, 로컬에서 Oz를 OpenAI-style/Anthropic-style 클라이언트(Open WebUI, Continue, Codex CLI, Claude Code, curl, 간단한 스크립트)와 연결할 수 있게 만든다.
+> **Use Warp's Oz AI anywhere — as a drop-in OpenAI / Anthropic API.**
 
-- **현재 상태:** 구현 완료, local-only 지원 유지
-- **현재 기준 문서:** `docs/API_CONTRACT.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/USAGE.md`
-- **중요 변경:** cloud backend는 **2026-03-09** 기준 supported surface에서 제거되었다. 관련 배경은 `docs/CLOUD_REMOVED.md` 참고
+`warp-proxy` is a lightweight local proxy server that exposes the [Warp](https://www.warp.dev/) Oz CLI as a fully compatible **OpenAI** and **Anthropic** HTTP API.
+Already logged in to Warp? Your session is all you need. No extra API keys. No cloud re-routing.
 
----
+> **한 줄 요약:** Warp에 이미 로그인되어 있다면, warp-proxy 하나로 Claude Code, Codex CLI, Open WebUI, Continue 등 모든 AI 클라이언트에서 Oz를 바로 쓸 수 있다.
 
-## 한눈에 보기
-
-- **Bind:** `127.0.0.1` only
-- **Primary backend:** `oz agent run`
-- **Primary model:** `warp-oz-cli`
-- **Main endpoints:** `GET /v1/models`, `POST /v1/chat/completions`, `POST /v1/responses`, `POST /v1/messages`, `POST /v1/messages/count_tokens`, `GET /admin/status`
-
----
-
-## 추천 읽기 순서
-
-### 지금 바로 필요한 문서
-1. [`docs/API_CONTRACT.md`](./docs/API_CONTRACT.md) — 현재 지원하는 HTTP 계약의 source of truth
-2. [`docs/USAGE.md`](./docs/USAGE.md) — 실제 실행/연결 방법
-3. [`docs/IMPLEMENTATION_STATUS.md`](./docs/IMPLEMENTATION_STATUS.md) — 현재 구현 범위와 검증 상태
-4. [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — 왜 이렇게 설계되었는지
-
-### 배경/역사 문서
-- [`docs/DECISIONS.md`](./docs/DECISIONS.md) — 현재 ADR과 설계 선택
-- [`docs/EVIDENCE.md`](./docs/EVIDENCE.md) — 검증 근거와 조사 결과
-- [`docs/CLOUD_REMOVED.md`](./docs/CLOUD_REMOVED.md) — 제거된 cloud backend 배경
-- [`PRD.md`](./PRD.md) — 초기 기획 초안(현재 계약 문서는 아님)
-
----
-
-## 이 프로젝트가 하는 일
-
-바깥에서는 OpenAI/Anthropic API처럼:
-- OpenAI: `POST /v1/chat/completions`, `POST /v1/responses`, `GET /v1/models`
-- Anthropic: `POST /v1/messages`, `POST /v1/messages/count_tokens`
-
-를 호출하고,
-안쪽에서는 실제로:
-- `oz agent run`
-
-을 실행한다.
-
-즉, 핵심 shape는 다음과 같다.
-
-```text
-OpenAI-compatible client
-  -> local FastAPI proxy
-  -> oz agent run
-  -> logged-in Warp/Oz session (or explicit api_key mode)
+```
+Your AI client (OpenAI / Anthropic SDK)
+        │
+        ▼
+ warp-proxy  :29113        ← this project
+   (FastAPI, local-only)
+        │
+        ▼
+   oz agent run            ← Warp's Oz CLI
+        │
+        ▼
+   Warp / Oz AI            ← your logged-in session
 ```
 
-### OpenAI Responses 요청
+---
+
+## Highlights
+
+- **Dual-protocol adapter** — speaks both OpenAI (`/v1/chat/completions`, `/v1/responses`) and Anthropic (`/v1/messages`) wire formats, including SSE streaming
+- **Zero extra credentials** — reuses your existing Warp login session; `ANTHROPIC_API_KEY=dummy-local` is enough
+- **Conversation continuity** — pass `metadata.warp_previous_response_id` to resume a prior Oz conversation thread
+- **Model namespacing** — use the stable alias `warp-oz-cli` or pin a specific model with `warp-oz-cli/claude-4-6-sonnet-max`
+- **Local-only by design** — hard-bound to `127.0.0.1`; no inbound network exposure
+- **Concurrency control** — configurable semaphore prevents overwhelming the CLI backend
+- **Version guard** — probes `oz dump-debug-info` at startup to ensure a known-good CLI version
+
+---
+
+## Table of Contents
+
+1. [Requirements](#requirements)
+2. [Quick Start](#quick-start)
+3. [API Endpoints](#api-endpoints)
+4. [Models](#models)
+5. [Usage Examples](#usage-examples)
+6. [Client Integration](#client-integration)
+7. [Environment Variables](#environment-variables)
+8. [Troubleshooting](#troubleshooting)
+9. [Project Structure](#project-structure)
+10. [Documentation Index](#documentation-index)
+
+---
+
+## Requirements
+
+| Requirement | Version |
+|---|---|
+| Python | ≥ 3.11 |
+| [uv](https://docs.astral.sh/uv/) *(recommended)* | any recent |
+| Warp terminal + Oz CLI (`oz`) | verified version |
+
+You must be **logged in to Warp** before starting warp-proxy. The proxy delegates every request to `oz agent run` and inherits your active session.
+
+> **전제 조건:** Warp 터미널에 이미 로그인되어 있어야 한다. 프록시는 `oz agent run`을 직접 호출해 세션을 재사용한다.
+
+---
+
+## Quick Start
+
+### Option A — uv (recommended)
+
+No virtual environment management needed:
+
+```bash
+git clone https://github.com/your-org/warp-proxy
+cd warp-proxy
+uv run uvicorn main:app --host 127.0.0.1 --port 29113
+```
+
+### Option B — pip / venv
+
+```bash
+git clone https://github.com/your-org/warp-proxy
+cd warp-proxy
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+uvicorn main:app --host 127.0.0.1 --port 29113
+```
+
+### Verify
+
+```bash
+# List available models
+curl http://127.0.0.1:29113/v1/models | jq .
+
+# Smoke test
+curl http://127.0.0.1:29113/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"warp-oz-cli","messages":[{"role":"user","content":"Reply with READY."}]}'
+```
+
+If you see a JSON response with `"content": "READY"` (or similar), you're good.
+
+---
+
+## API Endpoints
+
+### OpenAI-compatible
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/v1/models` | List available models |
+| `POST` | `/v1/chat/completions` | Chat completions (streaming + non-streaming) |
+| `POST` | `/v1/responses` | OpenAI Responses API (streaming + non-streaming) |
+
+### Anthropic-compatible
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/v1/messages` | Messages API (streaming + non-streaming) |
+| `POST` | `/v1/messages/count_tokens` | Token count estimation |
+
+### Admin
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/status` | Auth mode, CLI version probe, model availability |
+
+---
+
+## Models
+
+### Stable alias
+
+Always available — use this first:
+
+```
+warp-oz-cli
+```
+
+### Namespaced passthrough
+
+Pin a specific Oz model by appending its ID:
+
+```
+warp-oz-cli/<oz_model_id>
+```
+
+**Examples:**
+
+```
+warp-oz-cli/auto
+warp-oz-cli/auto-genius
+warp-oz-cli/claude-4-6-sonnet-max
+warp-oz-cli/claude-4-6-opus-high
+warp-oz-cli/gpt-5-4-xhigh
+warp-oz-cli/gemini-3-pro
+```
+
+Run `GET /v1/models` to see the current curated list. Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose every model Oz reports.
+
+> **팁:** 처음에는 항상 `warp-oz-cli`로 시작하고, 특정 모델이 필요할 때 namespaced ID로 전환하면 된다.
+
+---
+
+## Usage Examples
+
+### Non-streaming chat
+
+```bash
+curl http://127.0.0.1:29113/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "warp-oz-cli",
+    "messages": [
+      {"role": "system", "content": "Be concise."},
+      {"role": "user",   "content": "What is the capital of France?"}
+    ]
+  }'
+```
+
+### Streaming chat (SSE)
+
+```bash
+curl -N http://127.0.0.1:29113/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "warp-oz-cli",
+    "stream": true,
+    "messages": [{"role": "user", "content": "Count to five, one word per line."}]
+  }'
+```
+
+The stream follows the standard OpenAI SSE contract:
+`role chunk` → `content chunks` → `finish_reason: stop` → `data: [DONE]`
+
+### OpenAI Responses API
 
 ```bash
 curl http://127.0.0.1:29113/v1/responses \
@@ -66,292 +205,280 @@ curl http://127.0.0.1:29113/v1/responses \
   }'
 ```
 
----
-
-## 현재 지원하는 표면
-
-### 공개 API (OpenAI-compatible)
-- `GET /v1/models`
-- `POST /v1/chat/completions`
-- `POST /v1/responses`
-### 공개 API (Anthropic-compatible)
-- `POST /v1/messages`
-- `POST /v1/messages/count_tokens`
-
-### 운영용 API
-- `GET /admin/status`
-
-### 구현된 동작
-- non-streaming chat completions
-- SSE streaming (`stream=true`)
-- explicit continuation via `metadata.warp_previous_response_id`
-- stable alias `warp-oz-cli`
-- namespaced passthrough IDs `warp-oz-cli/<oz_model_id>`
-- startup-level `cwd`, `environment`, `skill`, `mcp`
-- dynamic model discovery cache + refresh-on-miss
-- strict Warp CLI version probe via `oz dump-debug-info`
-- local live smoke coverage for non-streaming / streaming / continuation
-
-### 보안/운영 원칙
-- `127.0.0.1` 바인딩 강제
-- 단일 사용자 로컬 사용 전제
-- silent backend switching 없음
-- 설정은 모두 환경변수 기반
-
----
-
-## 빠른 시작
-
-### 1. 서버 실행
-
-```bash
-cd /path/to/warp-proxy
-. .venv/bin/activate
-uvicorn main:app --host 127.0.0.1 --port 29113
-```
-
-### 2. 모델 목록 확인
-
-```bash
-curl http://127.0.0.1:29113/v1/models | jq .
-```
-
-### 3. 가장 기본적인 요청
-
-```bash
-curl http://127.0.0.1:29113/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "warp-oz-cli",
-    "messages": [
-      {"role": "user", "content": "Reply with READY."}
-    ]
-  }'
-```
-
-정상이라면 OpenAI-style `chat.completion` JSON이 반환된다.
-
----
-
-## 모델 사용법
-
-### 1. Stable alias
-가장 먼저 써야 하는 기본 모델:
-- `warp-oz-cli`
-
-### 2. Namespaced passthrough
-특정 Oz 모델을 직접 지정하려면:
-- `warp-oz-cli/<oz_model_id>`
-
-예:
-- `warp-oz-cli/auto`
-- `warp-oz-cli/claude-4-6-sonnet-max`
-- `warp-oz-cli/gpt-5-4-xhigh`
-
-### 3. `/v1/models` 노출 방식
-- 기본값: curated passthrough 목록만 노출
-- `WARP_PROXY_LIST_ALL_MODELS=true`: discovered 모델 전체 노출
-
-처음에는 **반드시 `warp-oz-cli`부터** 확인하는 것을 권장한다.
-
----
-
-## 요청 예시
-
-### Non-streaming 요청
-
-```bash
-curl http://127.0.0.1:29113/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "warp-oz-cli",
-    "messages": [
-      {"role": "system", "content": "Be concise."},
-      {"role": "user", "content": "Say hello."}
-    ]
-  }'
-```
-
-프록시는 `messages`를 flatten한 뒤 `oz agent run --output-format json` 기반으로 처리한다.
-
-### Streaming / SSE 요청
-
-```bash
-curl -N http://127.0.0.1:29113/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "warp-oz-cli",
-    "stream": true,
-    "messages": [
-      {"role": "user", "content": "Reply with READY in one or more chunks."}
-    ]
-  }'
-```
-
-성공 시 스트림은 다음 순서를 따른다.
-- 첫 chunk: `assistant` role
-- 이후 chunk: `content`
-- 마지막 성공 chunk: `finish_reason=stop`
-- 종료 sentinel: `data: [DONE]`
-### Anthropic Messages 요청
+### Anthropic Messages API
 
 ```bash
 curl http://127.0.0.1:29113/v1/messages \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "warp-oz-cli/claude-4-6-sonnet-high",
+    "model": "warp-oz-cli/claude-4-6-sonnet-max",
     "max_tokens": 512,
-    "messages": [
-      {"role": "user", "content": "Reply with READY."}
-    ]
+    "messages": [{"role": "user", "content": "Reply with READY."}]
   }'
 ```
 
-### Continuation(이어가기)
+### Conversation continuation
 
-첫 요청:
+Oz supports multi-turn conversations by referencing a prior response ID.
 
 ```bash
-first=$(curl -s http://127.0.0.1:29113/v1/chat/completions \
+# --- Turn 1 ---
+RESP=$(curl -s http://127.0.0.1:29113/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "warp-oz-cli",
-    "messages": [
-      {"role": "user", "content": "Remember the word BLUEBIRD and reply READY."}
-    ]
+    "messages": [{"role": "user", "content": "Remember the word BLUEBIRD and reply READY."}]
   }')
 
-resp_id=$(printf '%s' "$first" | jq -r '.id')
-```
+RESP_ID=$(echo "$RESP" | jq -r '.id')
 
-이어서 요청:
-
-```bash
+# --- Turn 2 (continues the same Oz conversation thread) ---
 curl http://127.0.0.1:29113/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d "{
     \"model\": \"warp-oz-cli\",
-    \"metadata\": {\"warp_previous_response_id\": \"${resp_id}\"},
-    \"messages\": [
-      {\"role\": \"user\", \"content\": \"What word did I ask you to remember?\"}
-    ]
+    \"metadata\": {\"warp_previous_response_id\": \"$RESP_ID\"},
+    \"messages\": [{\"role\": \"user\", \"content\": \"What word did I ask you to remember?\"}]
   }"
 ```
 
-이때 proxy가 내부적으로 `response_id -> oz conversation_id` 매핑을 조회해 `--conversation`으로 이어간다.
+warp-proxy persists a `response_id → oz conversation_id` mapping so the second call automatically passes `--conversation` to the CLI.
+
+> **이어가기:** `metadata.warp_previous_response_id`에 이전 응답 ID를 넣으면, warp-proxy가 내부적으로 Oz 대화 ID로 매핑해 `--conversation` 플래그와 함께 CLI를 호출한다.
 
 ---
 
-## 주요 환경변수
+## Client Integration
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `WARP_PROXY_HOST` | `127.0.0.1` | 바인드 주소. localhost 외 값은 거부됨 |
-| `WARP_PROXY_PORT` | `29113` | 서버 포트 |
-| `WARP_PROXY_AUTH_MODE` | `session` | `session` 또는 `api_key` |
-| `WARP_API_KEY` | — | `api_key` 모드일 때 필수 |
-| `WARP_PROXY_LIST_ALL_MODELS` | `false` | discovered 모델 전체 노출 여부 |
-| `WARP_PROXY_VERIFIED_WARP_VERSIONS` | supported version list | 허용할 Warp CLI 버전 allowlist |
-| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Oz CLI 실행 타임아웃 |
-| `WARP_PROXY_MAX_CONCURRENT_REQUESTS` | `4` | 내부 동시 실행 제한 |
-| `WARP_PROXY_CWD` | — | local run에 전달할 작업 디렉토리 |
-| `WARP_PROXY_ENVIRONMENT` | — | local run에 전달할 environment |
-| `WARP_PROXY_SKILL` | — | local run에 전달할 skill |
-| `WARP_PROXY_MCP` | — | local run에 전달할 MCP 스펙(JSON string/array) |
-| `WARP_PROXY_CONVERSATION_STORE` | `~/.warp-proxy/conversations.json` | continuation 매핑 저장 경로 |
-| `ALLOW_UNVERIFIED_WARP_CLI` | `false` | 버전 allowlist 검증 우회 |
+### Claude Code
 
-추가 세부사항은 `docs/API_CONTRACT.md` 참고.
+Add to `~/.claude/settings.json`:
 
----
+```json
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:29113",
+    "ANTHROPIC_API_KEY": "dummy-local"
+  }
+}
+```
 
-## 클라이언트 연결
+`ANTHROPIC_API_KEY` can be any non-empty string in `session` auth mode — warp-proxy does not validate it.
+
+```bash
+# Verify (headless)
+claude -p "Reply with READY."
+
+# One-liner without editing settings.json
+ANTHROPIC_BASE_URL=http://127.0.0.1:29113 ANTHROPIC_API_KEY=dummy-local \
+  claude -p "Reply with READY."
+```
+
+### Codex CLI
+
+Add to `~/.codex/config.toml`:
+
+```toml
+model          = "warp-oz-cli"
+model_provider = "warp_proxy"
+
+[model_providers.warp_proxy]
+name     = "warp-proxy"
+base_url = "http://127.0.0.1:29113/v1"
+env_key  = "WARP_PROXY_API_KEY"   # name of the env var used as the API key
+wire_api = "responses"            # uses the /v1/responses endpoint
+```
+
+```bash
+export WARP_PROXY_API_KEY=dummy-local   # any non-empty value
+
+# Verify
+codex -q "Reply with READY."
+
+# One-liner
+OPENAI_BASE_URL=http://127.0.0.1:29113/v1 OPENAI_API_KEY=dummy-local \
+  codex -q "Reply with READY."
+```
 
 ### Open WebUI
-- **API URL:** `http://127.0.0.1:29113/v1`
-- **Docker에서 Open WebUI 실행 시:** `http://host.docker.internal:29113/v1`
-- **Model:** `warp-oz-cli`
 
-### Continue
-- `provider: openai`
-- `apiBase: http://127.0.0.1:29113/v1`
-- `model: warp-oz-cli`
-### Codex CLI
-- `OPENAI_BASE_URL=http://127.0.0.1:29113/v1`
-- 모델은 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>` 사용
-### Claude Code (Anthropic gateway mode)
-- `ANTHROPIC_BASE_URL=http://127.0.0.1:29113`
-- model을 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`로 설정
+| Field | Value |
+|-------|-------|
+| OpenAI API URL | `http://127.0.0.1:29113/v1` |
+| API Key | `dummy-local` (any value) |
+| Model | `warp-oz-cli` |
 
-### 빠른 CLI 점검 (codex / claude)
+If Open WebUI runs in Docker, use `http://host.docker.internal:29113/v1` instead.
 
-Codex:
+### Continue (VS Code / JetBrains)
 
-```bash
-export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
-export OPENAI_API_KEY=dummy-local
-codex -p "Reply with READY."
+```json
+{
+  "models": [{
+    "title": "Warp Oz",
+    "provider": "openai",
+    "apiBase": "http://127.0.0.1:29113/v1",
+    "apiKey": "dummy-local",
+    "model": "warp-oz-cli"
+  }]
+}
 ```
 
-Claude Code:
+### CLIProxyAPI
 
-```bash
-export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
-export ANTHROPIC_AUTH_TOKEN=dummy-local
-claude -p "Reply with READY."
-```
-
-보다 자세한 예시는 `docs/USAGE.md` 참고.
-CLIProxyAPI에 연결하려면 `docs/CLIPROXYAPI.md` 참고.
+warp-proxy registers as either an `openai-compatibility` provider or a `claude-api-key` provider in CLIProxyAPI's `config.yaml`. See [`docs/CLIPROXYAPI.md`](./docs/CLIPROXYAPI.md) for the full guide.
 
 ---
 
-## 운영 확인용 엔드포인트
+## Environment Variables
 
-### `/admin/status`
+All configuration is done via environment variables — no config file required.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WARP_PROXY_HOST` | `127.0.0.1` | Bind address. Any non-localhost value is rejected at startup. |
+| `WARP_PROXY_PORT` | `29113` | Server port. |
+| `WARP_PROXY_AUTH_MODE` | `session` | `session` (reuse Warp login) or `api_key` (explicit key). |
+| `WARP_API_KEY` | — | Required when `WARP_PROXY_AUTH_MODE=api_key`. |
+| `WARP_PROXY_LIST_ALL_MODELS` | `false` | `true` to expose every discovered Oz model in `/v1/models`. |
+| `WARP_PROXY_VERIFIED_WARP_VERSIONS` | *(built-in list)* | Comma-separated allowlist of accepted Warp CLI versions. |
+| `ALLOW_UNVERIFIED_WARP_CLI` | `false` | `true` to skip the CLI version check entirely. |
+| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Per-request Oz CLI execution timeout (seconds). |
+| `WARP_PROXY_MAX_CONCURRENT_REQUESTS` | `4` | Max simultaneous Oz CLI processes. |
+| `WARP_PROXY_CWD` | — | Working directory passed to `oz agent run --cwd`. |
+| `WARP_PROXY_ENVIRONMENT` | — | Environment string passed to `oz agent run --environment`. |
+| `WARP_PROXY_SKILL` | — | Skill passed to `oz agent run --skill`. |
+| `WARP_PROXY_MCP` | — | MCP spec(s) passed to `oz agent run --mcp` (JSON string or array). |
+| `WARP_PROXY_CONVERSATION_STORE` | `~/.warp-proxy/conversations.json` | Path for the response-ID → conversation-ID mapping store. |
+
+> **주요 환경변수:** `WARP_PROXY_AUTH_MODE`, `WARP_PROXY_MAX_CONCURRENT_REQUESTS`, `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` 세 가지만 알면 대부분의 경우 커버된다.
+
+---
+
+## Troubleshooting
+
+### `/v1/models` works but chat requests fail
+
+The proxy server is up, but the Oz CLI backend is not responding correctly.
+
+1. Confirm you are logged in to Warp — open the Warp terminal and check
+2. Run `oz dump-debug-info` directly and verify it exits cleanly
+3. Try the stable alias first: `"model": "warp-oz-cli"`
+
+### `unsupported_cli_version` error
+
+warp-proxy probes the Oz CLI version at startup and rejects unknown versions to prevent silent behavioral regressions.
+
+```bash
+oz dump-debug-info   # check the reported Warp version
+```
+
+- Add the detected version to `WARP_PROXY_VERIFIED_WARP_VERSIONS`, or
+- Set `ALLOW_UNVERIFIED_WARP_CLI=true` to bypass the check (not recommended for production use)
+
+### Models don't appear in Open WebUI / Continue
+
+```bash
+# Direct check
+curl http://127.0.0.1:29113/v1/models | jq .
+
+# If the server is in Docker:
+# use http://host.docker.internal:29113/v1 as the API base URL
+```
+
+### `conversation_expired` (409)
+
+The referenced Oz conversation no longer exists on the backend (sessions can expire). Start a new conversation — omit `metadata.warp_previous_response_id`.
+
+### Admin status endpoint
+
+Always check this first when debugging:
 
 ```bash
 curl http://127.0.0.1:29113/admin/status | jq .
 ```
 
-여기서 확인할 수 있는 것:
-- auth mode
-- configured `cwd`
-- stable alias availability
-- cached Warp CLI version probe 상태
+It shows: auth mode, CLI version probe result, model availability, and configured `cwd`.
 
 ---
 
-## 트러블슈팅
+## Project Structure
 
-### `/v1/models` 는 되는데 chat이 안 된다
-- Warp/Oz CLI 로그인 상태를 확인
-- `oz dump-debug-info`가 정상 동작하는지 확인
-- 먼저 `warp-oz-cli`로 테스트
+```
+warp-proxy/
+├── main.py               # FastAPI app: route handlers, protocol adapters
+│                         #   OpenAI ↔ Anthropic request/response translation
+├── oz_bridge.py          # Core bridge: model resolution, CLI execution,
+│                         #   NDJSON parsing, conversation continuation
+├── models.py             # Pydantic request/response schemas
+│                         #   (OpenAI + Anthropic wire types)
+├── config.py             # Settings dataclass — all env-var driven
+├── conversation_store.py # JSON-backed store: response_id → oz conversation_id
+├── tests/                # Pytest test suite
+├── docs/
+│   ├── API_CONTRACT.md        # Authoritative HTTP contract (source of truth)
+│   ├── ARCHITECTURE.md        # Design decisions and component boundaries
+│   ├── IMPLEMENTATION_STATUS.md  # Verified feature matrix
+│   ├── USAGE.md               # Extended curl examples
+│   └── CLIPROXYAPI.md         # CLIProxyAPI integration guide
+└── pyproject.toml
+```
 
-### Continue / Open WebUI에서 모델이 안 보인다
-- `http://127.0.0.1:29113/v1/models` 직접 확인
-- Docker 환경이면 `host.docker.internal` 사용
-- 서버가 실제로 `127.0.0.1:29113`에서 떠 있는지 확인
+**How a request flows through the code:**
 
-### unsupported CLI version 오류가 난다
-- `oz dump-debug-info` 출력에서 Warp version을 확인
-- `WARP_PROXY_VERIFIED_WARP_VERSIONS`를 맞추거나
-- 정말 필요한 경우에만 `ALLOW_UNVERIFIED_WARP_CLI=true` 사용
+```
+HTTP request
+  → main.py (route handler)
+    → protocol adapter (_anthropic_request_to_chat_request, _responses_request_to_chat_request, ...)
+      → oz_bridge.OzBridge
+        → _prepare_execution()   # validate, resolve model, check CLI version, resolve continuation
+        → oz agent run ...       # subprocess (sync) or asyncio.create_subprocess_exec (streaming)
+        → parse_ndjson_events()  # NDJSON → ParsedEvent list
+        → aggregate_events()     # collapse text chunks, extract conversation_id
+      → protocol adapter (response serialization)
+  → HTTP response (JSON or SSE)
+```
 
 ---
 
-## 문서 가이드
+## Documentation Index
 
-### 현재 구현 기준 문서
-- [`docs/API_CONTRACT.md`](./docs/API_CONTRACT.md) — 현재 공개 API 계약
-- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — 현재 아키텍처와 설계 선택
-- [`docs/IMPLEMENTATION_STATUS.md`](./docs/IMPLEMENTATION_STATUS.md) — 구현 상태와 검증 스냅샷
-- [`docs/USAGE.md`](./docs/USAGE.md) — 실행/연결 예시
-- [`docs/CLIPROXYAPI.md`](./docs/CLIPROXYAPI.md) — CLIProxyAPI 연동 가이드
+### Implementation reference
 
-### 역사적/배경 문서
-- [`PRD.md`](./PRD.md) — 초기 기획 초안 (현재 구현과 일부 차이 있음)
-- [`docs/DECISIONS.md`](./docs/DECISIONS.md) — 현재 ADR 로그
-- [`docs/EVIDENCE.md`](./docs/EVIDENCE.md) — 설계 근거와 로컬 검증 기록
-- [`docs/CLOUD_REMOVED.md`](./docs/CLOUD_REMOVED.md) — 제거된 cloud backend 관련 배경
+| Doc | Purpose |
+|-----|---------|
+| [`docs/API_CONTRACT.md`](./docs/API_CONTRACT.md) | Current HTTP API contract — source of truth |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Architecture overview and design choices |
+| [`docs/IMPLEMENTATION_STATUS.md`](./docs/IMPLEMENTATION_STATUS.md) | Feature matrix and verification snapshot |
+| [`docs/USAGE.md`](./docs/USAGE.md) | Extended run / connection examples |
+| [`docs/CLIPROXYAPI.md`](./docs/CLIPROXYAPI.md) | CLIProxyAPI integration (OpenAI + Anthropic modes) |
+
+### Background / history
+
+| Doc | Purpose |
+|-----|---------|
+| [`docs/DECISIONS.md`](./docs/DECISIONS.md) | Architecture decision records (ADRs) |
+| [`docs/EVIDENCE.md`](./docs/EVIDENCE.md) | Design rationale and local verification records |
+| [`docs/CLOUD_REMOVED.md`](./docs/CLOUD_REMOVED.md) | Why the cloud backend was removed (2026-03-09) |
+| [`PRD.md`](./docs/archive/PRD.md) | Original product requirements draft |
+
+---
+
+## Security
+
+- warp-proxy **only binds to `127.0.0.1`**. Attempting to bind to any other address is rejected at startup.
+- It is designed for **single-user local use**. No multi-tenant isolation is implemented.
+- In `session` mode, the API key field is not validated. Do not expose the port to a shared network.
+- No silent backend switching — if the CLI version is unsupported, requests are rejected with a clear error.
+
+---
+
+## License
+
+See [LICENSE](./LICENSE) for details.
+
+---
+
+<p align="center">
+  <sub>warp-proxy is an independent open-source project and is not affiliated with or endorsed by Warp.</sub>
+</p>

@@ -16,7 +16,7 @@ A local OpenAI-compatible FastAPI proxy that exposes the logged-in Oz CLI throug
 | `conversation_store.py` | Persistent JSON mapping store from OpenAI-style response IDs to Oz conversation IDs using atomic writes |
 | `pyproject.toml` | Package metadata, runtime dependencies, and pytest configuration |
 | `README.md` | Korean quick start, configuration, curl usage, and client integration guide |
-| `PRD.md` | Initial product requirements and scope notes; historical product intent that predates cloud removal |
+| `docs/archive/PRD.md` | Initial product requirements and scope notes; historical planning artifact, archived |
 
 ## Subdirectories
 

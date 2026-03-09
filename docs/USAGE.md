@@ -6,13 +6,17 @@
 ## 1. 5-line quick start
 ```bash
 cd /path/to/warp-proxy
-. .venv/bin/activate
-uvicorn main:app --host 127.0.0.1 --port 29113
+uv run uvicorn main:app --host 127.0.0.1 --port 29113
 curl http://127.0.0.1:29113/v1/models
 curl http://127.0.0.1:29113/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"warp-oz-cli","messages":[{"role":"user","content":"Reply with READY."}]}'
 ```
 ## 2. Run the server
-### Local shell
+### Option A — uv (recommended)
+```bash
+cd /path/to/warp-proxy
+uv run uvicorn main:app --host 127.0.0.1 --port 29113
+```
+### Option B — venv
 ```bash
 cd /path/to/warp-proxy
 . .venv/bin/activate

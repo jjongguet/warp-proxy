@@ -20,7 +20,10 @@ Reference documentation for the current local-only proxy: API contract, architec
 | `CLOUD_REMOVED.md` | Explicit note describing what cloud support was removed and where to recover it from git history if ever needed |
 
 ## Subdirectories
-This directory currently has no child directories that require separate `AGENTS.md` files.
+
+| Directory | Purpose |
+|-----------|---------|
+| `archive/` | Historical and superseded documents (PRD, cloud removal notes, design evidence) |
 
 ## For AI Agents
 

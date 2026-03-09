@@ -2,7 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **Status:** Current implementation — local-only proxy with Phase 2 features integrated
-- **Authority note:** historical 문서와 충돌할 경우 현재 아키텍처 설명은 이 문서와 `docs/API_CONTRACT.md`를 우선한다.
+- **Authority note:** See [`docs/README.md`](./README.md) for the document authority chain. This file describes the current system architecture.
 
 ## 1. System overview
 

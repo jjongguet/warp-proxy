@@ -3,7 +3,7 @@
 - **Status:** Historical draft / initial planning artifact
 - **Last updated:** 2026-03-09
 - **Project type:** Greenfield
-- **Current implementation note:** 이 문서는 2026-03-08 시점의 초기 기획 초안이다. 현재 구현은 local-only이며 cloud backend는 제거되었다. 현재 truth는 `docs/API_CONTRACT.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/CLOUD_REMOVED.md`를 우선한다.
+- **Current implementation note:** 이 문서는 2026-03-08 시점의 초기 기획 초안이다. 현재 구현은 local-only이며 cloud backend는 제거되었다. 현재 truth는 `../API_CONTRACT.md`, `../IMPLEMENTATION_STATUS.md`, `../CLOUD_REMOVED.md`를 우선한다.
 - **Reader note:** 아래 내용은 역사적 계획 문서로 읽어야 하며, 현재 supported contract로 해석하면 안 된다.
 
 ## 1. Problem
