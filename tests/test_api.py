@@ -96,6 +96,133 @@ async def test_local_chat_completion_success_persists_conversation(settings: Set
 
 
 @pytest.mark.anyio
+async def test_responses_non_streaming_success(settings: Settings) -> None:
+    runner = FakeRunner([_version_result(), _local_success()])
+    bridge = OzBridge(settings, runner=runner)
+    async with await make_client(bridge) as client:
+        response = await client.post(
+            "/v1/responses",
+            json={
+                "model": DEFAULT_MODEL_ALIAS,
+                "input": "Say READY.",
+            },
+        )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["object"] == "response"
+    assert body["status"] == "completed"
+    assert body["model"] == DEFAULT_MODEL_ALIAS
+    assert body["output"][0]["type"] == "message"
+    assert body["output"][0]["content"][0]["type"] == "output_text"
+    assert isinstance(body["output_text"], str)
+    assert body["usage"]["input_tokens"] >= 1
+
+
+@pytest.mark.anyio
+async def test_responses_streaming_returns_sse_events(settings: Settings) -> None:
+    runner = FakeRunner([_version_result()])
+    bridge = OzBridge(settings, runner=runner)
+
+    async def fake_stream(_prepared):
+        yield parse_event_line('{"type":"system","event_type":"conversation_started","conversation_id":"conv-123"}')
+        yield parse_event_line('{"type":"agent","text":"hel"}')
+        yield parse_event_line('{"type":"agent","text":"lo"}')
+
+    bridge._stream_local_backend_events = fake_stream  # type: ignore[method-assign]
+    async with await make_client(bridge) as client:
+        response = await client.post(
+            "/v1/responses",
+            json={
+                "model": DEFAULT_MODEL_ALIAS,
+                "stream": True,
+                "input": "hello",
+            },
+        )
+    assert response.status_code == 200
+    event_data_pairs: list[tuple[str | None, str]] = []
+    current_event: str | None = None
+    for line in response.text.splitlines():
+        if line.startswith("event: "):
+            current_event = line[7:]
+        elif line.startswith("data: "):
+            event_data_pairs.append((current_event, line[6:]))
+    events = [event for event, _ in event_data_pairs]
+    assert events == [
+        "response.created",
+        "response.in_progress",
+        "response.output_item.added",
+        "response.content_part.added",
+        "response.output_text.delta",
+        "response.output_text.delta",
+        "response.output_text.done",
+        "response.content_part.done",
+        "response.output_item.done",
+        "response.completed",
+        "done",
+    ]
+    delta_payloads = [json.loads(payload) for event, payload in event_data_pairs if event == "response.output_text.delta"]
+    assert delta_payloads[0]["delta"] == "hel"
+    assert delta_payloads[1]["delta"] == "lo"
+    completed_payload = json.loads(event_data_pairs[9][1])
+    assert completed_payload["type"] == "response.completed"
+    assert event_data_pairs[10][1] == "[DONE]"
+
+
+@pytest.mark.anyio
+async def test_responses_previous_response_id_maps_to_continuation(settings: Settings) -> None:
+    runner = FakeRunner([_version_result(), _local_success(), _local_success('{"type":"agent","text":"continued"}\n')])
+    bridge = OzBridge(settings, runner=runner)
+    async with await make_client(bridge) as client:
+        first = await client.post(
+            "/v1/responses",
+            json={"model": DEFAULT_MODEL_ALIAS, "input": "Remember READY."},
+        )
+        first_id = first.json()["id"]
+        second = await client.post(
+            "/v1/responses",
+            json={
+                "model": DEFAULT_MODEL_ALIAS,
+                "previous_response_id": first_id,
+                "input": "What did I ask?",
+            },
+        )
+    assert second.status_code == 200
+    second_args = runner.calls[2]
+    assert "--conversation" in second_args
+    assert second_args[second_args.index("--conversation") + 1] == "00000000-0000-0000-0000-000000000000"
+
+
+@pytest.mark.anyio
+async def test_responses_input_blocks_and_instructions_are_normalized(settings: Settings) -> None:
+    runner = FakeRunner([_version_result(), _local_success()])
+    bridge = OzBridge(settings, runner=runner)
+    async with await make_client(bridge) as client:
+        response = await client.post(
+            "/v1/responses",
+            json={
+                "model": DEFAULT_MODEL_ALIAS,
+                "instructions": "Be concise.",
+                "input": [
+                    {
+                        "type": "message",
+                        "role": "user",
+                        "content": [
+                            {"type": "input_text", "text": "First line."},
+                            {"type": "input_text", "text": "Second line."},
+                        ],
+                    }
+                ],
+            },
+        )
+    assert response.status_code == 200
+    run_args = runner.calls[1]
+    assert "--prompt" in run_args
+    prompt = run_args[run_args.index("--prompt") + 1]
+    assert "[system]" in prompt and "Be concise." in prompt
+    assert "First line." in prompt and "Second line." in prompt
+
+
+@pytest.mark.anyio
 async def test_streaming_returns_sse_frames_and_done(settings: Settings) -> None:
     runner = FakeRunner([_version_result()])
     bridge = OzBridge(settings, runner=runner)

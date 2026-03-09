@@ -96,6 +96,158 @@ class ChatCompletionRequest(BaseModel):
     parallel_tool_calls: Any | None = Field(None, description="Ignored — compatibility only")
 
 
+class ResponsesRequest(BaseModel):
+    """OpenAI Responses API 요청(부분 호환)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    model: str
+    input: Any
+    stream: bool = False
+    instructions: Any | None = None
+    previous_response_id: str | None = None
+    max_output_tokens: int | None = None
+    temperature: float | None = None
+    top_p: float | None = None
+    stop: str | list[str] | None = None
+    user: str | None = None
+    metadata: dict[str, Any] | None = None
+    tools: Any | None = None
+    tool_choice: Any | None = None
+    truncation: str | None = None
+
+# ---------------------------------------------------------------------------
+# 요청 모델 (Anthropic-compatible)
+# ---------------------------------------------------------------------------
+
+
+class AnthropicMessage(BaseModel):
+    """Anthropic Messages API의 단일 입력 메시지."""
+
+    model_config = ConfigDict(extra="allow")
+
+    role: Literal["user", "assistant"]
+    content: Any
+
+    @model_validator(mode="after")
+    def validate_content(self) -> "AnthropicMessage":
+        if not isinstance(self.content, (str, list)):
+            raise ValueError("content must be a string or an array of blocks")
+        return self
+
+
+class AnthropicMessagesRequest(BaseModel):
+    """Anthropic-compatible messages request."""
+
+    model_config = ConfigDict(extra="allow")
+
+    model: str
+    messages: list[AnthropicMessage]
+    max_tokens: int | None = None
+    system: Any | None = None
+    stream: bool = False
+    temperature: float | None = None
+    top_p: float | None = None
+    stop_sequences: list[str] | None = None
+    metadata: dict[str, Any] | None = None
+    tools: Any | None = None
+    tool_choice: Any | None = None
+
+
+class AnthropicCountTokensResponse(BaseModel):
+    """`/v1/messages/count_tokens` 응답."""
+
+    input_tokens: int
+
+
+class AnthropicTextBlock(BaseModel):
+    """Anthropic 메시지의 텍스트 블록."""
+
+    type: Literal["text"] = "text"
+    text: str
+
+
+class AnthropicUsage(BaseModel):
+    """Anthropic usage shape (현재는 proxy 추정/기본값)."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
+class AnthropicMessageResponse(BaseModel):
+    """Anthropic-compatible message response."""
+
+    id: str
+    type: Literal["message"] = "message"
+    role: Literal["assistant"] = "assistant"
+    model: str
+    content: list[AnthropicTextBlock]
+    stop_reason: str | None = "end_turn"
+    stop_sequence: str | None = None
+    usage: AnthropicUsage = Field(default_factory=AnthropicUsage)
+
+
+class AnthropicError(BaseModel):
+    """Anthropic-style error body."""
+
+    type: str = "invalid_request_error"
+    message: str
+
+
+class AnthropicErrorEnvelope(BaseModel):
+    """Anthropic-style error envelope."""
+
+    type: Literal["error"] = "error"
+    error: AnthropicError
+
+
+class AnthropicMessageStartEvent(BaseModel):
+    type: Literal["message_start"] = "message_start"
+    message: AnthropicMessageResponse
+
+
+class AnthropicContentBlockStartEvent(BaseModel):
+    type: Literal["content_block_start"] = "content_block_start"
+    index: int = 0
+    content_block: AnthropicTextBlock
+
+
+class AnthropicTextDelta(BaseModel):
+    type: Literal["text_delta"] = "text_delta"
+    text: str
+
+
+class AnthropicContentBlockDeltaEvent(BaseModel):
+    type: Literal["content_block_delta"] = "content_block_delta"
+    index: int = 0
+    delta: AnthropicTextDelta
+
+
+class AnthropicContentBlockStopEvent(BaseModel):
+    type: Literal["content_block_stop"] = "content_block_stop"
+    index: int = 0
+
+
+class AnthropicMessageDeltaPayload(BaseModel):
+    stop_reason: str | None = "end_turn"
+    stop_sequence: str | None = None
+
+
+class AnthropicMessageDeltaEvent(BaseModel):
+    type: Literal["message_delta"] = "message_delta"
+    delta: AnthropicMessageDeltaPayload = Field(default_factory=AnthropicMessageDeltaPayload)
+    usage: AnthropicUsage = Field(default_factory=AnthropicUsage)
+
+
+class AnthropicMessageStopEvent(BaseModel):
+    type: Literal["message_stop"] = "message_stop"
+
+
+class AnthropicStreamErrorEvent(BaseModel):
+    type: Literal["error"] = "error"
+    error: AnthropicError
+
+
 # ---------------------------------------------------------------------------
 # 응답 모델 (non-streaming)
 # ---------------------------------------------------------------------------

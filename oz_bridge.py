@@ -321,6 +321,36 @@ class OzBridge:
         finally:
             self._semaphore.release()
 
+    async def stream_chat_completion_text_deltas(self, stream: PreparedStream) -> AsyncIterator[str]:
+        """스트림에서 assistant 텍스트 delta만 순서대로 반환한다.
+
+        이 메서드는 프로토콜별 직렬화(OpenAI/Anthropic)를 분리하기 위한 공통 경로다.
+        conversation 매핑 저장과 semaphore 해제까지 책임진다.
+        """
+        prepared = stream.prepared
+        event_iter = stream.event_iter
+        conversation_id = stream.conversation_id
+        try:
+            if stream.first_text:
+                yield stream.first_text
+            async for event in event_iter:
+                if event.conversation_id:
+                    conversation_id = event.conversation_id
+                if event.kind == "agent" and event.text:
+                    yield event.text
+            conversation_id = conversation_id or (prepared.prior_record.conversation_id if prepared.prior_record else None)
+            if conversation_id:
+                self._persist_mapping(prepared.response_id, conversation_id, prepared.model.backend_command)
+        finally:
+            self._semaphore.release()
+
+    def estimate_input_tokens(self, request: ChatCompletionRequest) -> int:
+        """입력 텍스트 기반의 best-effort 토큰 추정치."""
+        prompt = flatten_messages(request).strip()
+        if not prompt:
+            return 0
+        return len(prompt.split())
+
     def _execute_local_chat_completion(self, prepared: PreparedExecution) -> ChatCompletionResponse:
         result = self._run_sync(prepared.args)
         if result.returncode != 0:

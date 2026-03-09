@@ -15,6 +15,7 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - `oz_bridge.py`
 - `conversation_store.py`
 - `tests/test_api.py`
+- `tests/test_anthropic_api.py`
 - `tests/test_oz_bridge.py`
 - `tests/test_conversation_store.py`
 - `tests/smoke/test_live_oz.py`
@@ -29,6 +30,11 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - `GET /v1/models`
 - `POST /v1/chat/completions` non-streaming
 - `POST /v1/chat/completions` streaming/SSE
+- `POST /v1/responses` non-streaming (text subset)
+- `POST /v1/responses` streaming/SSE (output_text events)
+- `POST /v1/messages` non-streaming
+- `POST /v1/messages` streaming/SSE
+- `POST /v1/messages/count_tokens` (best-effort estimate)
 
 ### Operator API
 - `GET /admin/status`
@@ -36,6 +42,8 @@ The repository contains a runnable FastAPI implementation with the originally pl
 ### Functional behavior
 - explicit continuation via `metadata.warp_previous_response_id`
 - persistent conversation store
+- dual protocol adapters (OpenAI-compatible + Anthropic-compatible) over one Oz execution core
+- OpenAI Responses API adapter for Codex-style gateway clients
 - startup-level `cwd`
 - startup-level `environment`
 - startup-level local-only `skill`

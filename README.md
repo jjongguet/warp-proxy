@@ -1,7 +1,7 @@
-# warptocli
+# warp-proxy
 
-Warp/Oz CLI를 OpenAI-compatible HTTP endpoint로 재노출하는 **로컬 companion proxy** 프로젝트다.
-이미 로그인된 Oz CLI 세션을 재사용해, 로컬에서 Oz를 OpenAI-style 클라이언트(Open WebUI, Continue, curl, 간단한 스크립트)와 연결할 수 있게 만든다.
+Warp/Oz CLI를 OpenAI-compatible + Anthropic-compatible HTTP endpoint로 재노출하는 **로컬 companion proxy** 프로젝트다.
+이미 로그인된 Oz CLI 세션을 재사용해, 로컬에서 Oz를 OpenAI-style/Anthropic-style 클라이언트(Open WebUI, Continue, Claude Code, curl, 간단한 스크립트)와 연결할 수 있게 만든다.
 
 - **현재 상태:** 구현 완료, local-only 지원 유지
 - **현재 기준 문서:** `docs/API_CONTRACT.md`, `docs/IMPLEMENTATION_STATUS.md`, `docs/USAGE.md`
@@ -14,7 +14,7 @@ Warp/Oz CLI를 OpenAI-compatible HTTP endpoint로 재노출하는 **로컬 compa
 - **Bind:** `127.0.0.1` only
 - **Primary backend:** `oz agent run`
 - **Primary model:** `warp-oz-cli`
-- **Main endpoints:** `GET /v1/models`, `POST /v1/chat/completions`, `GET /admin/status`
+- **Main endpoints:** `GET /v1/models`, `POST /v1/chat/completions`, `POST /v1/responses`, `POST /v1/messages`, `POST /v1/messages/count_tokens`, `GET /admin/status`
 
 ---
 
@@ -36,9 +36,9 @@ Warp/Oz CLI를 OpenAI-compatible HTTP endpoint로 재노출하는 **로컬 compa
 
 ## 이 프로젝트가 하는 일
 
-바깥에서는 보통 OpenAI API처럼:
-- `POST /v1/chat/completions`
-- `GET /v1/models`
+바깥에서는 OpenAI/Anthropic API처럼:
+- OpenAI: `POST /v1/chat/completions`, `POST /v1/responses`, `GET /v1/models`
+- Anthropic: `POST /v1/messages`, `POST /v1/messages/count_tokens`
 
 를 호출하고,
 안쪽에서는 실제로:
@@ -55,13 +55,28 @@ OpenAI-compatible client
   -> logged-in Warp/Oz session (or explicit api_key mode)
 ```
 
+### OpenAI Responses 요청
+
+```bash
+curl http://127.0.0.1:29113/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "warp-oz-cli",
+    "input": "Reply with READY."
+  }'
+```
+
 ---
 
 ## 현재 지원하는 표면
 
-### 공개 API
+### 공개 API (OpenAI-compatible)
 - `GET /v1/models`
 - `POST /v1/chat/completions`
+- `POST /v1/responses`
+### 공개 API (Anthropic-compatible)
+- `POST /v1/messages`
+- `POST /v1/messages/count_tokens`
 
 ### 운영용 API
 - `GET /admin/status`
@@ -90,7 +105,7 @@ OpenAI-compatible client
 ### 1. 서버 실행
 
 ```bash
-cd /path/to/warptocli
+cd /path/to/warp-proxy
 . .venv/bin/activate
 uvicorn main:app --host 127.0.0.1 --port 29113
 ```
@@ -178,6 +193,19 @@ curl -N http://127.0.0.1:29113/v1/chat/completions \
 - 이후 chunk: `content`
 - 마지막 성공 chunk: `finish_reason=stop`
 - 종료 sentinel: `data: [DONE]`
+### Anthropic Messages 요청
+
+```bash
+curl http://127.0.0.1:29113/v1/messages \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "warp-oz-cli/claude-4-6-sonnet-high",
+    "max_tokens": 512,
+    "messages": [
+      {"role": "user", "content": "Reply with READY."}
+    ]
+  }'
+```
 
 ### Continuation(이어가기)
 
@@ -230,7 +258,7 @@ curl http://127.0.0.1:29113/v1/chat/completions \
 | `WARP_PROXY_ENVIRONMENT` | — | local run에 전달할 environment |
 | `WARP_PROXY_SKILL` | — | local run에 전달할 skill |
 | `WARP_PROXY_MCP` | — | local run에 전달할 MCP 스펙(JSON string/array) |
-| `WARP_PROXY_CONVERSATION_STORE` | `~/.warptocli/conversations.json` | continuation 매핑 저장 경로 |
+| `WARP_PROXY_CONVERSATION_STORE` | `~/.warp-proxy/conversations.json` | continuation 매핑 저장 경로 |
 | `ALLOW_UNVERIFIED_WARP_CLI` | `false` | 버전 allowlist 검증 우회 |
 
 추가 세부사항은 `docs/API_CONTRACT.md` 참고.
@@ -248,6 +276,12 @@ curl http://127.0.0.1:29113/v1/chat/completions \
 - `provider: openai`
 - `apiBase: http://127.0.0.1:29113/v1`
 - `model: warp-oz-cli`
+### Codex CLI
+- `OPENAI_BASE_URL=http://127.0.0.1:29113/v1`
+- 모델은 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>` 사용
+### Claude Code (Anthropic gateway mode)
+- `ANTHROPIC_BASE_URL=http://127.0.0.1:29113`
+- model을 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`로 설정
 
 보다 자세한 예시는 `docs/USAGE.md` 참고.
 CLIProxyAPI에 연결하려면 `docs/CLIPROXYAPI.md` 참고.
