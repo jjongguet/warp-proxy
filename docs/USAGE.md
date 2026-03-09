@@ -1,8 +1,8 @@
 # Usage Guide
 - **Last updated:** 2026-03-09
-- **Scope:** 실제 실행 방법, OpenAI/Anthropic 요청 예시, Open WebUI/Continue/Codex/Claude Code 연결 예시
-- **Applies to:** 현재 local-only 구현
-- **Reading note:** 동작 차이가 의심되면 `docs/API_CONTRACT.md`와 `docs/IMPLEMENTATION_STATUS.md`를 우선 확인한다.
+- **Scope:** Runtime execution, OpenAI/Anthropic request examples, and client integration guides for Open WebUI, Continue, Codex, and Claude Code
+- **Applies to:** Current local-only implementation
+- **Reading note:** If behavior looks different from what is described here, check `docs/API_CONTRACT.md` and `docs/IMPLEMENTATION_STATUS.md` first.
 ## 1. 5-line quick start
 ```bash
 cd /path/to/warp-proxy
@@ -70,7 +70,7 @@ curl -N http://127.0.0.1:29113/v1/chat/completions \
   }'
 ```
 ### 3.6 Continuation request
-첫 요청:
+First request:
 ```bash
 first=$(curl -s http://127.0.0.1:29113/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -82,7 +82,7 @@ first=$(curl -s http://127.0.0.1:29113/v1/chat/completions \
   }')
 resp_id=$(printf '%s' "$first" | jq -r '.id')
 ```
-이어서 요청:
+Follow-up request:
 ```bash
 curl http://127.0.0.1:29113/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -132,16 +132,21 @@ curl http://127.0.0.1:29113/v1/messages/count_tokens \
     ]
   }'
 ```
-## 5. Open WebUI 연결
-Open WebUI는 OpenAI-compatible API에 연결할 수 있다. 현재 `warp-proxy`는 `/v1/models`와 `/v1/chat/completions`를 제공하므로 OpenAI-compatible connection으로 붙이면 된다.
-### 권장 설정
+## 5. Open WebUI
+
+Open WebUI connects to OpenAI-compatible APIs. Since `warp-proxy` exposes `/v1/models` and `/v1/chat/completions`, use the OpenAI-compatible connection type.
+
+### Recommended settings
 - **API URL:** `http://127.0.0.1:29113/v1`
 - **If Open WebUI runs in Docker:** `http://host.docker.internal:29113/v1`
-- **API Key:** `none` 또는 비어 있어도 되면 비움
+- **API Key:** `none` or leave empty
 - **Model:** `warp-oz-cli`
-## 6. Continue 연결
-Continue는 OpenAI-compatible provider 설정에서 `apiBase`를 지정할 수 있다. `warp-proxy`는 이 경로로 붙이면 된다.
-### 예시 `config.yaml`
+
+## 6. Continue
+
+Continue supports specifying `apiBase` in the OpenAI-compatible provider configuration. Point it to `warp-proxy` as follows.
+
+### Example `config.yaml`
 ```yaml
 name: warp-proxy
 version: 0.0.1
@@ -157,52 +162,63 @@ models:
       - edit
       - apply
 ```
-## 7. Claude Code 연결
-Claude Code gateway mode에서는 Anthropic-compatible endpoint를 사용한다.
+## 7. Claude Code
+
+In Claude Code gateway mode, use the Anthropic-compatible endpoint.
 ```bash
 export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
 ```
-설정 파일에서 기본 모델을 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`로 지정해 사용할 수 있다.
-### 7.1 빠른 실행 확인
+You can set the default model to `warp-oz-cli` or `warp-oz-cli/<oz_model_id>` in the settings file.
+
+### 7.1 Quick verification
 ```bash
 export ANTHROPIC_BASE_URL=http://127.0.0.1:29113
 export ANTHROPIC_AUTH_TOKEN=dummy-local
 claude -p "Reply with READY."
 ```
-## 8. Codex CLI 연결
-Codex는 OpenAI Responses API 경로를 사용하므로 `/v1` 베이스 URL을 지정한다.
+## 8. Codex CLI
+
+Codex uses the OpenAI Responses API path, so specify the `/v1` base URL.
 ```bash
 export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
 ```
-설정에서 모델은 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`를 사용한다.
-### 8.1 빠른 실행 확인
+Set the model to `warp-oz-cli` or `warp-oz-cli/<oz_model_id>` in your configuration.
+
+### 8.1 Quick verification
 ```bash
 export OPENAI_BASE_URL=http://127.0.0.1:29113/v1
 export OPENAI_API_KEY=dummy-local
 codex -p "Reply with READY."
 ```
-## 9. 처음 추천 모델
-처음엔 아래 순서로 써보는 걸 추천한다.
+## 9. Recommended starting models
+
+Start in this order:
 1. `warp-oz-cli`
 2. `warp-oz-cli/<discovered-model-id>`
-## 10. 트러블슈팅
-### `/v1/models` 는 되는데 chat/messages가 안 된다
-- Warp/Oz CLI 로그인 상태 확인
-- `oz dump-debug-info`가 정상 동작하는지 확인
-- 먼저 `warp-oz-cli`로 테스트
-### Continue / Open WebUI에서 모델이 안 보인다
-- `http://127.0.0.1:29113/v1/models` 직접 확인
-- Docker 환경이면 `host.docker.internal` 사용
-- 서버가 `127.0.0.1:29113`에서 실제로 떠 있는지 확인
-### Claude Code에서 gateway 호출이 안 된다
-- `ANTHROPIC_BASE_URL`가 `http://127.0.0.1:29113`인지 확인
-- `POST /v1/messages`가 200을 반환하는지 curl로 먼저 확인
-- `ANTHROPIC_AUTH_TOKEN`를 설정했는지 확인
-### Codex에서 provider 호출이 안 된다
-- `OPENAI_BASE_URL`가 `http://127.0.0.1:29113/v1`인지 확인
-- `POST /v1/responses`가 200을 반환하는지 curl로 먼저 확인
-- `OPENAI_API_KEY`를 설정했는지 확인
-## 11. 참고 링크
+
+## 10. Troubleshooting
+
+### `/v1/models` works but chat/messages does not
+- Check your Warp/Oz CLI login status
+- Verify `oz dump-debug-info` runs without errors
+- Test with `warp-oz-cli` first
+
+### Models not visible in Continue / Open WebUI
+- Check `http://127.0.0.1:29113/v1/models` directly
+- Use `host.docker.internal` if running in a Docker environment
+- Confirm the server is actually running on `127.0.0.1:29113`
+
+### Claude Code gateway calls not working
+- Confirm `ANTHROPIC_BASE_URL` is set to `http://127.0.0.1:29113`
+- First verify with curl that `POST /v1/messages` returns 200
+- Confirm `ANTHROPIC_AUTH_TOKEN` is set
+
+### Codex provider calls not working
+- Confirm `OPENAI_BASE_URL` is set to `http://127.0.0.1:29113/v1`
+- First verify with curl that `POST /v1/responses` returns 200
+- Confirm `OPENAI_API_KEY` is set
+
+## 11. Reference links
 - Continue OpenAI-compatible config:
   - https://docs.continue.dev/customize/model-providers/top-level/openai
   - https://docs.continue.dev/reference/config

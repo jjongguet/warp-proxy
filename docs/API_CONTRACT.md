@@ -28,17 +28,17 @@
 
 #### Optional fields
 
-- **`stream`** (`boolean`, default `false`) — `true`로 설정하면 SSE(text/event-stream) 스트리밍 응답을 반환한다.
-- **`temperature`** (`float | null`) — 샘플링 온도. Oz CLI에 `--temperature`로 전달된다.
-- **`top_p`** (`float | null`) — Nucleus sampling 확률 임계값.
-- **`max_tokens`** (`integer | null`) — 응답 최대 토큰 수.
-- **`stop`** (`string | string[] | null`) — 생성 중단 시퀀스. 문자열 하나 또는 배열.
-- **`user`** (`string | null`) — 최종 사용자 식별자. 프록시에서 로깅 용도로 사용할 수 있다.
-- **`metadata`** (`object | null`) — 프록시 메타데이터. 현재 유일하게 의미 있는 키는 `warp_previous_response_id` (대화 이어가기).
+- **`stream`** (`boolean`, default `false`) — When `true`, returns an SSE (`text/event-stream`) streaming response.
+- **`temperature`** (`float | null`) — Sampling temperature. Passed to the Oz CLI as `--temperature`.
+- **`top_p`** (`float | null`) — Nucleus sampling probability threshold.
+- **`max_tokens`** (`integer | null`) — Maximum number of tokens in the response.
+- **`stop`** (`string | string[] | null`) — Stop sequences for generation. A single string or an array.
+- **`user`** (`string | null`) — End-user identifier. May be used by the proxy for logging.
+- **`metadata`** (`object | null`) — Proxy metadata. The only meaningful key is `warp_previous_response_id` (conversation continuation).
 
-#### Continuation (대화 이어가기)
+#### Continuation
 
-`metadata.warp_previous_response_id`에 이전 응답의 `id`를 넣으면, 프록시가 내부 conversation store에서 Oz conversation id를 조회하여 `--conversation`으로 전달한다.
+Set `metadata.warp_previous_response_id` to the `id` of a previous response. The proxy looks up the Oz conversation id in its internal conversation store and forwards it via `--conversation`.
 
 ```json
 {
@@ -48,36 +48,37 @@
 }
 ```
 
-- 프록시는 raw Oz conversation id를 클라이언트로부터 직접 받지 **않는다**.
-- 존재하지 않는 `warp_previous_response_id`는 `400 invalid_conversation_reference`를 반환한다.
+- The proxy does **not** accept raw Oz conversation ids directly from the client.
+- An unknown `warp_previous_response_id` returns `400 invalid_conversation_reference`.
 
-#### Compatibility-only fields (수신은 되지만 Oz로 전달하지 않음)
+#### Compatibility-only fields (received but not forwarded to Oz)
 
-OpenAI SDK 호환성을 위해 아래 필드를 수신하되, 무시한다:
+The following fields are accepted for OpenAI SDK compatibility but ignored:
 
-- `tools` — function calling 도구 정의
-- `tool_choice` — 도구 선택 전략
+- `tools` — function calling tool definitions
+- `tool_choice` — tool selection strategy
 - `functions` — legacy function calling (deprecated)
-- `function_call` — legacy function calling 선택
-- `response_format` — 응답 형식 지정 (JSON mode 등)
-- `audio` — 오디오 입출력
-- `parallel_tool_calls` — 병렬 도구 호출 허용 여부
+- `function_call` — legacy function calling selection
+- `response_format` — response format specification (JSON mode, etc.)
+- `audio` — audio input/output
+- `parallel_tool_calls` — parallel tool call permission
 
-이 필드에 값을 넣어도 에러가 발생하지 않지만, Oz CLI에 전달되지 않는다.
-정의되지 않은 필드를 보내면 `400 unsupported_field` 에러가 반환된다 (`extra="forbid"`).
+Setting these fields does not produce an error, but they are not forwarded to the Oz CLI.
+Sending any undefined field will return a `400 unsupported_field` error (`extra="forbid"`).
 
-> **참고:** 비-텍스트 message content (이미지 등)는 지원하지 않는다.
+> **Note:** Non-text message content (images, etc.) is not supported.
+
 ### 2.2 `POST /v1/responses` (partial compatibility)
 
-- OpenAI Responses API의 **text 중심 subset**을 제공한다.
-- 내부 실행 경로는 `/v1/chat/completions`와 동일하게 Oz bridge를 사용한다.
-- 요청의 `input`/`instructions`는 텍스트 메시지로 정규화되어 동일한 prompt path로 전달된다.
-- `previous_response_id`가 주어지면 내부적으로 `metadata.warp_previous_response_id`로 매핑되어 continuation을 수행한다.
-- `tools`, `tool_choice` 등 Responses 전용 필드는 수신하지만 Oz 실행으로 직접 전달되지는 않는다.
+- Provides a **text-focused subset** of the OpenAI Responses API.
+- Uses the same Oz bridge execution path as `/v1/chat/completions` internally.
+- The request's `input`/`instructions` are normalized into text messages and sent through the same prompt path.
+- When `previous_response_id` is provided, it is mapped internally to `metadata.warp_previous_response_id` for continuation.
+- Responses-specific fields such as `tools` and `tool_choice` are accepted but not forwarded to Oz execution directly.
 
 #### Streaming event shape
 
-`stream=true`일 때 `text/event-stream`으로 다음 이벤트 시퀀스를 반환한다.
+When `stream=true`, the endpoint returns `text/event-stream` with the following event sequence:
 
 1. `response.created`
 2. `response.in_progress`
@@ -90,20 +91,21 @@ OpenAI SDK 호환성을 위해 아래 필드를 수신하되, 무시한다:
 9. `response.completed`
 10. terminal `event: done`, `data: [DONE]`
 
-현재 범위는 `output_text` 중심이며 tool-call 항목은 생성하지 않는다.
+The current scope is `output_text`-focused; tool-call items are not generated.
+
 ## 3. Anthropic-compatible endpoints
 
 ### `POST /v1/messages`
-- Anthropic Messages API와 호환되는 입력/출력 형태를 제공한다.
-- `model`은 OpenAI path와 동일하게 `warp-oz-cli` 또는 `warp-oz-cli/<oz_model_id>`를 사용한다.
-- `messages`/`system`은 내부적으로 텍스트 prompt로 정규화되어 동일한 Oz 실행 경로를 사용한다.
-- `stream=true`일 때 Anthropic SSE 이벤트(`message_start`, `content_block_*`, `message_delta`, `message_stop`)를 반환한다.
-- mid-stream failure는 `event: error` 이벤트를 마지막으로 스트림을 종료한다.
+- Provides Anthropic Messages API-compatible input/output.
+- `model` uses the same identifiers as the OpenAI path: `warp-oz-cli` or `warp-oz-cli/<oz_model_id>`.
+- `messages`/`system` are normalized internally into a text prompt and sent through the same Oz execution path.
+- When `stream=true`, returns Anthropic SSE events (`message_start`, `content_block_*`, `message_delta`, `message_stop`).
+- Mid-stream failures terminate the stream with an `event: error` event.
 
 ### `POST /v1/messages/count_tokens`
-- Claude Code gateway 호환을 위해 제공된다.
-- 현재 Oz backend가 prompt token accounting을 직접 제공하지 않으므로, 반환값은 normalized prompt 기반의 **best-effort estimate**이다.
-- 응답 형태:
+- Provided for Claude Code gateway compatibility.
+- Because the Oz backend does not directly provide prompt token accounting, the returned value is a **best-effort estimate** based on the normalized prompt.
+- Response shape:
 
 ```json
 {
@@ -113,7 +115,7 @@ OpenAI SDK 호환성을 위해 아래 필드를 수신하되, 무시한다:
 
 ### Anthropic error envelope
 
-Anthropic endpoints (`/v1/messages*`)는 아래 형태로 에러를 반환한다.
+Anthropic endpoints (`/v1/messages*`) return errors in the following format:
 
 ```json
 {
@@ -128,15 +130,15 @@ Anthropic endpoints (`/v1/messages*`)는 아래 형태로 에러를 반환한다
 ## 4. Model contract
 
 ### Stable alias
-- `warp-oz-cli` — local Oz CLI backend의 기본 모델
+- `warp-oz-cli` — default model for the local Oz CLI backend
 
 ### Namespaced passthrough IDs
-- `warp-oz-cli/<oz_model_id>` — 특정 Oz 모델 지정
+- `warp-oz-cli/<oz_model_id>` — target a specific Oz model
 
-예: `warp-oz-cli/claude-3.5-sonnet`, `warp-oz-cli/gpt-4o`
+e.g., `warp-oz-cli/claude-3.5-sonnet`, `warp-oz-cli/gpt-4o`
 
-Stable alias가 canonical이며, namespaced ID는 `oz model list --output-format json`에서 자동 검색된다.
-기본적으로 curated 목록(약 21개)만 노출되며, `WARP_PROXY_LIST_ALL_MODELS=true`로 전체 목록을 볼 수 있다.
+The stable alias is canonical. Namespaced IDs are auto-discovered from `oz model list --output-format json`.
+By default only the curated list (~21 models) is exposed. Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose the full list.
 
 ### Discovery lifecycle
 - catalog starts unloaded
@@ -145,22 +147,22 @@ Stable alias가 canonical이며, namespaced ID는 `oz model list --output-format
 - one refresh-on-miss is attempted before returning `unsupported_model`
 - if discovery is required for a namespaced request and no successful catalog exists, return `503 model_catalog_unavailable`
 
-## 5. Startup-level config (환경변수)
+## 5. Startup-level config (environment variables)
 
-- **`WARP_PROXY_HOST`** — 바인드 주소 (기본 `127.0.0.1`, 변경 불가)
-- **`WARP_PROXY_PORT`** — 포트 (기본 `29113`)
-- **`WARP_PROXY_AUTH_MODE`** — `session` (기본) 또는 `api_key`
-- **`WARP_API_KEY`** — `api_key` 모드일 때 필수
-- **`WARP_PROXY_CWD`** — local `oz agent run`에 전달할 작업 디렉토리
-- **`WARP_PROXY_ENVIRONMENT`** — local `oz agent run`에 전달할 Oz environment (`--environment`)
-- **`WARP_PROXY_SKILL`** — local `oz agent run`에 전달할 Oz skill (`--skill`)
-- **`WARP_PROXY_MCP`** — local `oz agent run`에 전달할 MCP 서버 스펙(JSON string 또는 JSON 배열)
-- **`WARP_PROXY_CONVERSATION_STORE`** — 대화 저장 경로 (기본 `~/.warp-proxy/conversations.json`)
-- **`WARP_PROXY_LIST_ALL_MODELS`** — `true`이면 curated 필터 해제, 전체 모델 노출
-- **`WARP_PROXY_VERIFIED_WARP_VERSIONS`** — 허용할 Warp CLI 버전의 쉼표 구분 allowlist
-- **`WARP_PROXY_COMMAND_TIMEOUT_SECONDS`** — CLI 실행 타임아웃 (기본 `120`)
-- **`WARP_PROXY_MAX_CONCURRENT_REQUESTS`** — 동시에 처리할 Oz 요청 수 제한 (기본 `4`)
-- **`ALLOW_UNVERIFIED_WARP_CLI`** — `true`이면 CLI 버전 검증 건너뜀
+- **`WARP_PROXY_HOST`** — bind address (default `127.0.0.1`, cannot be changed)
+- **`WARP_PROXY_PORT`** — port (default `29113`)
+- **`WARP_PROXY_AUTH_MODE`** — `session` (default) or `api_key`
+- **`WARP_API_KEY`** — required when `auth_mode=api_key`
+- **`WARP_PROXY_CWD`** — working directory forwarded to local `oz agent run`
+- **`WARP_PROXY_ENVIRONMENT`** — Oz environment forwarded to local `oz agent run` (`--environment`)
+- **`WARP_PROXY_SKILL`** — Oz skill forwarded to local `oz agent run` (`--skill`)
+- **`WARP_PROXY_MCP`** — MCP server spec forwarded to local `oz agent run` (JSON string or JSON array)
+- **`WARP_PROXY_CONVERSATION_STORE`** — conversation store path (default `~/.warp-proxy/conversations.json`)
+- **`WARP_PROXY_LIST_ALL_MODELS`** — when `true`, removes curated filter and exposes all discovered models
+- **`WARP_PROXY_VERIFIED_WARP_VERSIONS`** — comma-separated allowlist of permitted Warp CLI versions
+- **`WARP_PROXY_COMMAND_TIMEOUT_SECONDS`** — CLI execution timeout (default `120`)
+- **`WARP_PROXY_MAX_CONCURRENT_REQUESTS`** — concurrency limit for simultaneous Oz requests (default `4`)
+- **`ALLOW_UNVERIFIED_WARP_CLI`** — when `true`, skips CLI version validation
 
 ## 6. Non-streaming success response
 
@@ -249,11 +251,11 @@ All non-SSE errors use:
 }
 ```
 
-Stable alias(`warp-oz-cli`)가 항상 첫 번째.
-Curated passthrough ID들이 이어서 나온다 (기본 약 21개).
-`WARP_PROXY_LIST_ALL_MODELS=true` 설정 시 전체 discovered 모델이 노출된다.
+The stable alias (`warp-oz-cli`) is always first.
+Curated passthrough IDs follow (default ~21).
+Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose all discovered models.
 
 ## 10. `/admin/status`
 
-운영자용 헬스체크 엔드포인트. 모델 alias의 가용성(CLI 존재 여부)과 Warp CLI 버전 검증 상태를 반환한다.
-dynamic model discovery 결과는 포함하지 않는다 (alias-only).
+Operator health-check endpoint. Returns the availability (CLI presence) of model aliases and the Warp CLI version validation status.
+Dynamic model discovery results are not included (alias-only).
