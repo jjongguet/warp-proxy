@@ -23,6 +23,7 @@ When documents conflict, this precedence order applies:
 **I want to use the proxy →** [`USAGE.md`](./USAGE.md)
 
 **I want to integrate with CLIProxyAPI →** [`CLIPROXYAPI.md`](./CLIPROXYAPI.md)
+**I want to connect GJC (Gajae Code) →** [`gjc-integration.md`](./gjc-integration.md) (English) / [`gjc-integration.ko.md`](./gjc-integration.ko.md) (한국어)
 
 **I want to understand the API surface →** [`API_CONTRACT.md`](./API_CONTRACT.md)
 
@@ -44,6 +45,7 @@ When documents conflict, this precedence order applies:
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Runtime architecture, request lifecycle, streaming flow, version probing |
 | [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md) | Implemented feature matrix and verification snapshot |
 | [`USAGE.md`](./USAGE.md) | Quick start, curl examples, client integration (Claude Code, Codex CLI, Open WebUI, Continue) |
+| [`gjc-integration.md`](./gjc-integration.md) / [`gjc-integration.ko.md`](./gjc-integration.ko.md) | GJC provider + preset integration guide (bilingual) |
 | [`CLIPROXYAPI.md`](./CLIPROXYAPI.md) | CLIProxyAPI integration guide (OpenAI-compatible and Anthropic-compatible modes) |
 | [`DECISIONS.md`](./DECISIONS.md) | Architecture decision records (ADRs) — rationale behind key choices |
 

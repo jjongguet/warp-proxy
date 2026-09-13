@@ -135,10 +135,10 @@ Anthropic endpoints (`/v1/messages*`) return errors in the following format:
 ### Namespaced passthrough IDs
 - `warp-oz-cli/<oz_model_id>` — target a specific Oz model
 
-e.g., `warp-oz-cli/claude-3.5-sonnet`, `warp-oz-cli/gpt-4o`
+e.g., `warp-oz-cli/claude-5-1-fable-max`, `warp-oz-cli/gpt-6-astra-max`
 
 The stable alias is canonical. Namespaced IDs are auto-discovered from `oz model list --output-format json`.
-By default only the curated list (~21 models) is exposed. Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose the full list.
+By default only the curated list (46 models) is exposed. Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose the full list.
 
 ### Discovery lifecycle
 - catalog starts unloaded
@@ -247,13 +247,13 @@ All non-SSE errors use:
   "object": "list",
   "data": [
     {"id": "warp-oz-cli", "object": "model", "owned_by": "warp-proxy"},
-    {"id": "warp-oz-cli/claude-3.5-sonnet", "object": "model", "owned_by": "warp-proxy"}
+    {"id": "warp-oz-cli/claude-5-1-fable-max", "object": "model", "owned_by": "warp-proxy"}
   ]
 }
 ```
 
 The stable alias (`warp-oz-cli`) is always first.
-Curated passthrough IDs follow (default ~21).
+Curated passthrough IDs follow (default 46).
 Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose all discovered models.
 
 ## 10. `/admin/status`

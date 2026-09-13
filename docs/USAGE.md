@@ -1,12 +1,12 @@
 # Usage Guide
-- **Last updated:** 2026-03-09
+- **Last updated:** 2026-09-13
 - **Scope:** Runtime execution, OpenAI/Anthropic request examples, and client integration guides for Open WebUI, Continue, Codex, and Claude Code
 - **Applies to:** Current local-only implementation
 - **Reading note:** If behavior looks different from what is described here, check `docs/API_CONTRACT.md` and `docs/IMPLEMENTATION_STATUS.md` first.
 ## 1. 5-line quick start
 ```bash
 cd /path/to/warp-proxy
-uv run uvicorn main:app --host 127.0.0.1 --port 29113
+uv run python run.py
 curl http://127.0.0.1:29113/v1/models
 curl http://127.0.0.1:29113/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"warp-oz-cli","messages":[{"role":"user","content":"Reply with READY."}]}'
 ```
@@ -14,13 +14,13 @@ curl http://127.0.0.1:29113/v1/chat/completions -H "Content-Type: application/js
 ### Option A — uv (recommended)
 ```bash
 cd /path/to/warp-proxy
-uv run uvicorn main:app --host 127.0.0.1 --port 29113
+uv run python run.py
 ```
 ### Option B — venv
 ```bash
 cd /path/to/warp-proxy
 . .venv/bin/activate
-uvicorn main:app --host 127.0.0.1 --port 29113
+python run.py
 ```
 ## 3. OpenAI-compatible examples
 ### 3.1 List models

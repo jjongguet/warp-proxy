@@ -1,4 +1,5 @@
 # warp-proxy
+**[English](README.md)** | **[한국어](README.ko.md)**
 
 > **Use Warp's Oz AI anywhere — as a drop-in OpenAI / Anthropic API.**
 
@@ -28,7 +29,7 @@ Your AI client (OpenAI / Anthropic SDK)
 - **Dual-protocol adapter** — speaks both OpenAI (`/v1/chat/completions`, `/v1/responses`) and Anthropic (`/v1/messages`) wire formats, including SSE streaming
 - **Zero extra credentials** — reuses your existing Warp login session; `ANTHROPIC_API_KEY=dummy-local` is enough
 - **Conversation continuity** — pass `metadata.warp_previous_response_id` to resume a prior Oz conversation thread
-- **Model namespacing** — use the stable alias `warp-oz-cli` or pin a specific model with `warp-oz-cli/claude-4-6-sonnet-max`
+- **Model namespacing** — use the stable alias `warp-oz-cli` or pin a specific model with `warp-oz-cli/claude-5-1-fable-max`
 - **Local-only by design** — hard-bound to `127.0.0.1`; no inbound network exposure
 - **Concurrency control** — configurable semaphore prevents overwhelming the CLI backend
 - **Version guard** — probes `oz dump-debug-info` at startup to ensure a known-good CLI version
@@ -71,7 +72,7 @@ You must be **logged in to Warp** before starting warp-proxy. The proxy delegate
 No virtual environment management needed:
 
 ```bash
-git clone https://github.com/your-org/warp-proxy
+git clone https://github.com/jjongguet/warp-proxy
 cd warp-proxy
 uv run python run.py
 ```
@@ -79,7 +80,7 @@ uv run python run.py
 ### Option B — pip / venv
 
 ```bash
-git clone https://github.com/your-org/warp-proxy
+git clone https://github.com/jjongguet/warp-proxy
 cd warp-proxy
 python3 -m venv .venv
 source .venv/bin/activate
@@ -150,11 +151,11 @@ warp-oz-cli/<oz_model_id>
 
 ```
 warp-oz-cli/auto
-warp-oz-cli/auto-genius
-warp-oz-cli/claude-4-6-sonnet-max
-warp-oz-cli/claude-4-6-opus-high
-warp-oz-cli/gpt-5-4-xhigh
-warp-oz-cli/gemini-3-pro
+warp-oz-cli/auto-efficient
+warp-oz-cli/claude-5-1-fable-max
+warp-oz-cli/claude-4-8-opus-max
+warp-oz-cli/gpt-6-astra-max
+warp-oz-cli/gpt-5-6-luna-xhigh
 ```
 
 Run `GET /v1/models` to see the current curated list. Set `WARP_PROXY_LIST_ALL_MODELS=true` to expose every model Oz reports.
@@ -211,7 +212,7 @@ curl http://127.0.0.1:29113/v1/responses \
 curl http://127.0.0.1:29113/v1/messages \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "warp-oz-cli/claude-4-6-sonnet-max",
+    "model": "warp-oz-cli/claude-5-1-fable-max",
     "max_tokens": 512,
     "messages": [{"role": "user", "content": "Reply with READY."}]
   }'
@@ -324,6 +325,9 @@ If Open WebUI runs in Docker, use `http://host.docker.internal:29113/v1` instead
 }
 ```
 
+### GJC (Gajae Code)
+
+Register `warp-oz` as a custom provider in `~/.gjc/agent/models.yml` and build model presets on top of it. See [`docs/gjc-integration.md`](./docs/gjc-integration.md) for the full bilingual guide (English / 한국어).
 ### CLIProxyAPI
 
 warp-proxy registers as either an `openai-compatibility` provider or a `claude-api-key` provider in CLIProxyAPI's `config.yaml`. See [`docs/CLIPROXYAPI.md`](./docs/CLIPROXYAPI.md) for the full guide.
@@ -407,6 +411,7 @@ It shows: auth mode, CLI version probe result, model availability, and configure
 
 ```
 warp-proxy/
+├── run.py                # Server entry point (python run.py)
 ├── main.py               # FastAPI app: route handlers, protocol adapters
 │                         #   OpenAI ↔ Anthropic request/response translation
 ├── oz_bridge.py          # Core bridge: model resolution, CLI execution,
@@ -421,6 +426,8 @@ warp-proxy/
 │   ├── ARCHITECTURE.md        # Design decisions and component boundaries
 │   ├── IMPLEMENTATION_STATUS.md  # Verified feature matrix
 │   ├── USAGE.md               # Extended curl examples
+│   ├── gjc-integration.md     # GJC integration guide (English)
+│   ├── gjc-integration.ko.md  # GJC integration guide (한국어)
 │   └── CLIPROXYAPI.md         # CLIProxyAPI integration guide
 └── pyproject.toml
 ```
@@ -476,7 +483,7 @@ HTTP request
 
 ## License
 
-See [LICENSE](./LICENSE) for details.
+No open-source license has been declared yet. If you want to use this code, open an issue first.
 
 ---
 

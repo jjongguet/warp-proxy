@@ -1,6 +1,6 @@
 # Implementation Status
 
-- **Last updated:** 2026-03-09
+- **Last updated:** 2026-09-13
 - **Status:** Phase 2 implemented and evidenced
 - **Authority note:** See [`docs/README.md`](./README.md) for the document authority chain. This file tracks implemented features and verification.
 
@@ -9,6 +9,7 @@
 The repository contains a runnable FastAPI implementation with the originally planned Phase 2 additions now integrated.
 
 ### Implemented files
+- `run.py`
 - `main.py`
 - `config.py`
 - `models.py`
@@ -51,6 +52,9 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - additive dynamic model passthrough
 - lazy model discovery cache + refresh-on-miss
 - local live smoke for non-streaming / streaming / continuation
+- `run.py` entry point with client-compat default (`WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS=true` unless set)
+- curated `/v1/models` lineup refreshed to the current catalog (46 models, dead IDs removed)
+- bilingual docs (English / 한국어) and a GJC integration guide (`docs/gjc-integration.md`)
 
 ## Backend adapter shape
 
@@ -65,9 +69,10 @@ The repository contains a runnable FastAPI implementation with the originally pl
 ## Verification snapshot
 
 Verified successfully:
-- `python3 -m compileall main.py config.py models.py oz_bridge.py conversation_store.py tests`
-- `. .venv/bin/activate && pytest -q`
-- `. .venv/bin/activate && RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/test_live_oz.py`
+- `python3 -m compileall run.py main.py config.py models.py oz_bridge.py conversation_store.py tests`
+- `uv run --extra dev pytest` — 39 passed, 3 skipped (2026-09-13)
+- live smoke via `python run.py` on 2026-09-13: `/v1/models` lists 47 entries; completions on `auto-efficient`, `claude-5-1-fable-max`, `gpt-6-astra-max`, and `auto-open` all returned successfully; strict mode (`WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS=false`) still rejects unsupported fields with 400
+- GJC end-to-end on 2026-09-13: a preset mapping all roles to warp-oz models drove real completions through both `/v1/messages` (claude-family models) and `/v1/chat/completions`
 
 ## Remaining caveats
 
