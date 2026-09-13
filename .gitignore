@@ -16,3 +16,4 @@ htmlcov/
 .omc/
 uv.lock
 *.egg-info/
+.gjc/
