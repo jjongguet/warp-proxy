@@ -56,6 +56,7 @@ CURATED_MODEL_IDS: tuple[str, ...] = (
     "claude-4-6-opus-max",
     "claude-4-6-sonnet-high",
     "claude-4-6-sonnet-max",
+    "claude-5-1-fable-max",
     "gemini-3-pro",
     "gpt-5-3-codex-high",
     "gpt-5-3-codex-low",
@@ -65,6 +66,7 @@ CURATED_MODEL_IDS: tuple[str, ...] = (
     "gpt-5-4-low",
     "gpt-5-4-medium",
     "gpt-5-4-xhigh",
+    "gpt-6-astra-max",
 )
 # 수신은 하지만 Oz로 전달하지 않는 필드 (OpenAI SDK 호환용)
 SUPPORTED_UNSUPPORTED_FIELDS = (

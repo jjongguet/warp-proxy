@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Literal
 
 # 검증 완료된 Warp CLI 버전. 이 버전 외에는 기본적으로 거부한다.
-SUPPORTED_WARP_VERSION = "v0.2026.03.04.08.20.stable_02"
+SUPPORTED_WARP_VERSION = "v0.2026.09.09.08.26.stable_02"
 DEFAULT_APP_VERSION = "0.1.0"
 DEFAULT_CONVERSATION_STORE = Path.home() / ".warp-proxy" / "conversations.json"
 

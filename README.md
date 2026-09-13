@@ -73,7 +73,7 @@ No virtual environment management needed:
 ```bash
 git clone https://github.com/your-org/warp-proxy
 cd warp-proxy
-uv run uvicorn main:app --host 127.0.0.1 --port 29113
+uv run python run.py
 ```
 
 ### Option B — pip / venv
@@ -84,7 +84,7 @@ cd warp-proxy
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-uvicorn main:app --host 127.0.0.1 --port 29113
+python run.py
 ```
 
 ### Verify
