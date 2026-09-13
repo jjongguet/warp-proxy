@@ -80,6 +80,7 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 | `WARP_PROXY_MCP` | — | JSON string or JSON array of strings forwarded as repeated `--mcp` flags |
 | `WARP_PROXY_CONVERSATION_STORE` | `~/.warp-proxy/conversations.json` | Persistent response-id to conversation-id mapping store |
 | `ALLOW_UNVERIFIED_WARP_CLI` | `false` | Bypass strict Warp CLI version enforcement |
+| `WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS` | `false` | `true` accepts-and-ignores unsupported request fields instead of rejecting with 400 |
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
 

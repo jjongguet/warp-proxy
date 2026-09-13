@@ -163,6 +163,7 @@ By default only the curated list (~21 models) is exposed. Set `WARP_PROXY_LIST_A
 - **`WARP_PROXY_COMMAND_TIMEOUT_SECONDS`** — CLI execution timeout (default `120`)
 - **`WARP_PROXY_MAX_CONCURRENT_REQUESTS`** — concurrency limit for simultaneous Oz requests (default `4`)
 - **`ALLOW_UNVERIFIED_WARP_CLI`** — when `true`, skips CLI version validation
+- **`WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS`** — when `true`, unsupported request fields are ignored instead of rejected with a 400 error
 
 ## 6. Non-streaming success response
 
