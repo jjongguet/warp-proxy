@@ -94,6 +94,8 @@ class ChatCompletionRequest(BaseModel):
     response_format: Any | None = Field(None, description="Ignored — compatibility only")
     audio: Any | None = Field(None, description="Ignored — compatibility only")
     parallel_tool_calls: Any | None = Field(None, description="Ignored — compatibility only")
+    stream_options: Any | None = Field(None, description="Ignored — compatibility only")
+    max_completion_tokens: Any | None = Field(None, description="Ignored — compatibility only")
 
 
 class ResponsesRequest(BaseModel):

@@ -36,6 +36,7 @@ class Settings:
     list_all_models: bool = False
     warp_api_key: str | None = None
     allow_unverified_warp_cli: bool = False
+    ignore_unsupported_fields: bool = False
     verified_warp_versions: tuple[str, ...] = field(default_factory=lambda: (SUPPORTED_WARP_VERSION,))
     command_timeout_seconds: float = 120.0
     max_concurrent_requests: int = 4
@@ -81,6 +82,7 @@ class Settings:
             auth_mode=os.getenv("WARP_PROXY_AUTH_MODE", "session"),
             warp_api_key=os.getenv("WARP_API_KEY"),
             allow_unverified_warp_cli=_env_bool("ALLOW_UNVERIFIED_WARP_CLI", default=False),
+            ignore_unsupported_fields=_env_bool("WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS", default=False),
             verified_warp_versions=_env_csv(
                 "WARP_PROXY_VERIFIED_WARP_VERSIONS",
                 default=(SUPPORTED_WARP_VERSION,),

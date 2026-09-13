@@ -75,6 +75,8 @@ SUPPORTED_UNSUPPORTED_FIELDS = (
     "response_format",
     "audio",
     "parallel_tool_calls",
+    "stream_options",
+    "max_completion_tokens",
 )
 # oz dump-debug-info 출력에서 버전을 추출하는 정규식
 WARP_VERSION_PATTERN = re.compile(r'Warp version:\s+Some\("(?P<version>[^"]+)"\)')
@@ -390,9 +392,10 @@ class OzBridge:
         )
 
     def _validate_request(self, request: ChatCompletionRequest) -> None:
-        for field_name in SUPPORTED_UNSUPPORTED_FIELDS:
-            if getattr(request, field_name) is not None:
-                raise ProxyError(status_code=400, code="unsupported_field", message=f"{field_name} is not supported in this proxy.", param=field_name)
+        if not self.settings.ignore_unsupported_fields:
+            for field_name in SUPPORTED_UNSUPPORTED_FIELDS:
+                if getattr(request, field_name) is not None:
+                    raise ProxyError(status_code=400, code="unsupported_field", message=f"{field_name} is not supported in this proxy.", param=field_name)
         if not request.messages:
             raise ProxyError(status_code=400, code="invalid_message_content", message="messages must contain at least one message.", param="messages")
 
