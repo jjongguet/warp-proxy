@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +10,9 @@ from warp_proxy.config import Settings, SUPPORTED_WARP_VERSION
 from warp_proxy.models import ChatCompletionRequest
 from warp_proxy.oz_bridge import (
     DEFAULT_MODEL_ALIAS,
+    OzBridge,
+    PreparedExecution,
+    ResolvedModel,
     aggregate_events,
     flatten_messages,
     parse_event_line,
@@ -90,3 +95,29 @@ def test_parse_event_line_rejects_non_object_json() -> None:
 def test_parse_model_catalog_parses_dicts_and_strings() -> None:
     payload = [{"id": "gpt-5"}, {"id": "claude"}, "manual"]
     assert _parse_model_catalog(payload) == ("gpt-5", "claude", "manual")
+
+@pytest.mark.anyio
+async def test_stream_local_backend_events_accepts_line_longer_than_64kib(tmp_path: Path) -> None:
+    # asyncio StreamReader 기본 한계(64 KiB)를 넘는 한 줄 NDJSON 이벤트도 죽지 않고 파싱되어야 한다.
+    script = (
+        "import json, sys\n"
+        f"payload = {{'type': 'agent', 'text': 'x' * 70000}}\n"
+        "sys.stdout.write(json.dumps(payload) + '\\n')\n"
+    )
+    settings = Settings(conversation_store_path=str(tmp_path / "conversations.json"))
+    bridge = OzBridge(settings)
+    prepared = PreparedExecution(
+        request=ChatCompletionRequest(model=DEFAULT_MODEL_ALIAS, messages=[]),
+        response_id="resp_test",
+        created=0,
+        model=ResolvedModel(public_model=DEFAULT_MODEL_ALIAS, backend_command="run"),
+        args=[sys.executable, "-c", script],
+        prior_response_id=None,
+        prior_record=None,
+    )
+
+    events = [event async for event in bridge._stream_local_backend_events(prepared)]
+
+    assert len(events) == 1
+    assert events[0].kind == "agent"
+    assert len(events[0].text or "") == 70000

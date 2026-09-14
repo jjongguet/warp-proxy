@@ -117,6 +117,10 @@ _CONVERSATION_EXPIRED_PATTERN = re.compile(
     r"conversation.*(expired|not found|unknown|does not exist|invalid)",
     re.IGNORECASE,
 )
+# asyncio StreamReader의 기본 한 줄 한계(64 KiB)보다 긴 NDJSON 이벤트를 허용한다.
+# 도구 출력·긴 코드 블록이 한 줄로 몰리는 경우 실제로 초과한다.
+_STREAM_READER_LIMIT_BYTES = 16 * 1024 * 1024
+
 
 
 # ---------------------------------------------------------------------------
@@ -593,6 +597,7 @@ class OzBridge:
             *prepared.args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            limit=_STREAM_READER_LIMIT_BYTES,
         )
         stderr_chunks: list[str] = []
 
@@ -615,6 +620,15 @@ class OzBridge:
                     with suppress(ProcessLookupError):
                         await process.wait()
                     raise ProxyError(status_code=504, code="backend_timeout", message="Oz CLI stream timed out.") from exc
+                except ValueError as exc:
+                    process.kill()
+                    with suppress(ProcessLookupError):
+                        await process.wait()
+                    raise ProxyError(
+                        status_code=502,
+                        code="backend_output_too_large",
+                        message=f"Oz CLI emitted a single output line longer than {_STREAM_READER_LIMIT_BYTES} bytes.",
+                    ) from exc
                 if not line:
                     break
                 raw = line.decode().strip()
