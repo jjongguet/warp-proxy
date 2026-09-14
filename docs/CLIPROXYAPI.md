@@ -15,11 +15,11 @@ warp-proxy는 **OpenAI-compatible** (`/v1/chat/completions`) 및 **Anthropic-com
    ```bash
    # uv 방식 (권장)
    cd /path/to/warp-proxy
-   uv run uvicorn main:app --host 127.0.0.1 --port 29113
+   uv run uvicorn warp_proxy.main:app --host 127.0.0.1 --port 29113
 
    # 또는 venv 방식
    . .venv/bin/activate
-   uvicorn main:app --host 127.0.0.1 --port 29113
+   uvicorn warp_proxy.main:app --host 127.0.0.1 --port 29113
    ```
 2. **CLIProxyAPI가 설치**되어 있어야 한다 (기본 포트 `8317`)
 

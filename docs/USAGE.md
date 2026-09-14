@@ -19,9 +19,15 @@ uv run python run.py
 ### Option B — venv
 ```bash
 cd /path/to/warp-proxy
+python3 -m venv .venv
 . .venv/bin/activate
+pip install -r requirements.txt
 python run.py
 ```
+
+macOS Homebrew/Xcode Python rejects bare `pip install` (PEP 668); stay inside
+a venv, or just run `python run.py` — it re-executes into `.venv` and
+installs `requirements.txt` itself when dependencies are missing.
 ## 3. OpenAI-compatible examples
 ### 3.1 List models
 ```bash

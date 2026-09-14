@@ -1,6 +1,6 @@
 # Implementation Status
 
-- **Last updated:** 2026-09-13
+- **Last updated:** 2026-09-14
 - **Status:** Phase 2 implemented and evidenced
 - **Authority note:** See [`docs/README.md`](./README.md) for the document authority chain. This file tracks implemented features and verification.
 
@@ -10,11 +10,13 @@ The repository contains a runnable FastAPI implementation with the originally pl
 
 ### Implemented files
 - `run.py`
-- `main.py`
-- `config.py`
-- `models.py`
-- `oz_bridge.py`
-- `conversation_store.py`
+- `requirements.txt` / `requirements-dev.txt`
+- `src/warp_proxy/__init__.py`
+- `src/warp_proxy/main.py`
+- `src/warp_proxy/config.py`
+- `src/warp_proxy/models.py`
+- `src/warp_proxy/oz_bridge.py`
+- `src/warp_proxy/conversation_store.py`
 - `tests/test_api.py`
 - `tests/test_anthropic_api.py`
 - `tests/test_oz_bridge.py`
@@ -69,8 +71,17 @@ The repository contains a runnable FastAPI implementation with the originally pl
 ## Verification snapshot
 
 Verified successfully:
-- `python3 -m compileall run.py main.py config.py models.py oz_bridge.py conversation_store.py tests`
-- `uv run --extra dev pytest` — 39 passed, 3 skipped (2026-09-13)
+- src-layout restructure verified on 2026-09-14 in a clean venv (warp-proxy itself not pip-installed):
+  - `pip install -r requirements.txt` → `python run.py` boots on `127.0.0.1:29113`
+  - `GET /admin/status` → 200 with supported CLI version `v0.2026.09.09.08.26.stable_02`
+  - `GET /v1/models` → 200, 47 entries (baseline preserved)
+  - real completion with OpenAI-SDK probe field `max_completion_tokens` → 200
+  - `pip install -r requirements-dev.txt` → `pytest` — 39 passed, 3 skipped (2026-09-14)
+- `run.py` self-heal verified on 2026-09-14 against hostile interpreters:
+  - bare `python run.py` with the system shim (externally-managed Homebrew/Xcode Python) re-executes into `.venv` and serves: `/admin/status` 200, `/v1/models` 47, completion 200
+  - `uv run python run.py` → `/admin/status` 200
+  - `.venv/bin/pip install -r requirements.txt` runs clean after the bootstrap provisions `pip` into the uv-created venv
+- `uv run --extra dev pytest` — 39 passed, 3 skipped (2026-09-13 and 2026-09-14 post-restructure)
 - live smoke via `python run.py` on 2026-09-13: `/v1/models` lists 47 entries; completions on `auto-efficient`, `claude-5-1-fable-max`, `gpt-6-astra-max`, and `auto-open` all returned successfully; strict mode (`WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS=false`) still rejects unsupported fields with 400
 - GJC end-to-end on 2026-09-13: a preset mapping all roles to warp-oz models drove real completions through both `/v1/messages` (claude-family models) and `/v1/chat/completions`
 

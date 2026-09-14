@@ -81,9 +81,18 @@ git clone https://github.com/jjongguet/warp-proxy
 cd warp-proxy
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements.txt
 python run.py
 ```
+
+`requirements.txt` 만으로 `python run.py` 에 필요한 전부다. 개발용
+(테스트, `pytest -q`)에는 `pip install -r requirements-dev.txt` 를 설치한다.
+
+macOS 참고: Homebrew/Xcode Python 은 `pip install` 을 거부(PEP 668)하거나
+버전이 낮아서 venv 밖에서 `pip install -r requirements.txt` 가 실패할 수
+있다. `python run.py` 는 이걸 스스로 복구한다 — 의존성이 없으면 레포의
+`.venv` 로 재진입하고(없으면 생성 후 `requirements.txt` 로 설치) 계속한다.
+스크립트를 시작할 수 있는 인터프리터라면 어떤 것이든 결국 서버가 뜬다.
 
 ### 확인
 
@@ -405,14 +414,17 @@ curl http://127.0.0.1:29113/admin/status | jq .
 ```
 warp-proxy/
 ├── run.py                # 서버 실행 진입점 (python run.py)
-├── main.py               # FastAPI 앱: 라우트 핸들러, 프로토콜 어댑터
-│                         #   OpenAI ↔ Anthropic 요청/응답 변환
-├── oz_bridge.py          # 핵심 브리지: 모델 해석, CLI 실행,
-│                         #   NDJSON 파싱, 대화 연속
-├── models.py             # Pydantic 요청/응답 스키마
-│                         #   (OpenAI + Anthropic 와이어 타입)
-├── config.py             # Settings 데이터클래스 — 전부 환경변수 기반
-├── conversation_store.py # JSON 저장소: response_id → oz conversation_id
+├── requirements.txt      # pip 사용자용 런타임 의존성 (python run.py)
+├── requirements-dev.txt  # 런타임 + 테스트 의존성 (pytest)
+├── src/warp_proxy/
+│   ├── main.py           # FastAPI 앱: 라우트 핸들러, 프로토콜 어댑터
+│   │                     #   OpenAI ↔ Anthropic 요청/응답 변환
+│   ├── oz_bridge.py      # 핵심 브리지: 모델 해석, CLI 실행,
+│   │                     #   NDJSON 파싱, 대화 연속
+│   ├── models.py         # Pydantic 요청/응답 스키마
+│   │                     #   (OpenAI + Anthropic 와이어 타입)
+│   ├── config.py         # Settings 데이터클래스 — 전부 환경변수 기반
+│   └── conversation_store.py  # JSON 저장소: response_id → oz conversation_id
 ├── tests/                # Pytest 테스트 스위트
 ├── docs/
 │   ├── API_CONTRACT.md        # 권위 있는 HTTP 계약 (단일 진실 공급원)

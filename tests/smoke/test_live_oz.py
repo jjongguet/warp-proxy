@@ -6,9 +6,9 @@ from pathlib import Path
 import httpx
 import pytest
 
-from config import Settings
-from main import create_app
-from oz_bridge import DEFAULT_MODEL_ALIAS, OzBridge
+from warp_proxy.config import Settings
+from warp_proxy.main import create_app
+from warp_proxy.oz_bridge import DEFAULT_MODEL_ALIAS, OzBridge
 
 
 def _require_live_smoke() -> None:

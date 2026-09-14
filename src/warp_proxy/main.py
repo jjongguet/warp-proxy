@@ -14,8 +14,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 import uvicorn
 
-from config import Settings
-from models import (
+from .config import Settings
+from .models import (
     APIError,
     APIErrorEnvelope,
     AnthropicContentBlockDeltaEvent,
@@ -38,7 +38,7 @@ from models import (
     ChatMessage,
     ResponsesRequest,
 )
-from oz_bridge import OzBridge, ProxyError
+from .oz_bridge import OzBridge, ProxyError
 
 
 def _anthropic_error_from_proxy(exc: ProxyError) -> AnthropicErrorEnvelope:
@@ -627,4 +627,4 @@ app = create_app()
 
 if __name__ == "__main__":
     settings = Settings.from_env()
-    uvicorn.run("main:app", host=settings.host, port=settings.port, reload=False)
+    uvicorn.run("warp_proxy.main:app", host=settings.host, port=settings.port, reload=False)

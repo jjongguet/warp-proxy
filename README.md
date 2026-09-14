@@ -84,9 +84,19 @@ git clone https://github.com/jjongguet/warp-proxy
 cd warp-proxy
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements.txt
 python run.py
 ```
+
+`requirements.txt` covers everything `python run.py` needs. For development
+(tests, `pytest -q`), install `pip install -r requirements-dev.txt` instead.
+
+Note for macOS: Homebrew/Xcode Pythons refuse `pip install` (PEP 668) or lack
+the required version, so bare `pip install -r requirements.txt` can fail
+outside a venv. `python run.py` self-heals this: if dependencies are missing,
+it re-executes into the repo's `.venv` (creating and provisioning one from
+`requirements.txt` if needed), so any interpreter that can start the script
+ends up running the server.
 
 ### Verify
 
@@ -412,14 +422,17 @@ It shows: auth mode, CLI version probe result, model availability, and configure
 ```
 warp-proxy/
 ├── run.py                # Server entry point (python run.py)
-├── main.py               # FastAPI app: route handlers, protocol adapters
-│                         #   OpenAI ↔ Anthropic request/response translation
-├── oz_bridge.py          # Core bridge: model resolution, CLI execution,
-│                         #   NDJSON parsing, conversation continuation
-├── models.py             # Pydantic request/response schemas
-│                         #   (OpenAI + Anthropic wire types)
-├── config.py             # Settings dataclass — all env-var driven
-├── conversation_store.py # JSON-backed store: response_id → oz conversation_id
+├── requirements.txt      # Runtime deps for pip users (python run.py)
+├── requirements-dev.txt  # Runtime + test deps (pytest)
+├── src/warp_proxy/
+│   ├── main.py           # FastAPI app: route handlers, protocol adapters
+│   │                     #   OpenAI ↔ Anthropic request/response translation
+│   ├── oz_bridge.py      # Core bridge: model resolution, CLI execution,
+│   │                     #   NDJSON parsing, conversation continuation
+│   ├── models.py         # Pydantic request/response schemas
+│   │                     #   (OpenAI + Anthropic wire types)
+│   ├── config.py         # Settings dataclass — all env-var driven
+│   └── conversation_store.py  # JSON-backed store: response_id → oz conversation_id
 ├── tests/                # Pytest test suite
 ├── docs/
 │   ├── API_CONTRACT.md        # Authoritative HTTP contract (source of truth)

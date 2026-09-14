@@ -10,7 +10,7 @@ Pytest coverage for the local-only proxy. This directory combines deterministic 
 
 | File | Description |
 |------|-------------|
-| `conftest.py` | Adds the project root to `sys.path` so the flat module layout imports cleanly in tests |
+| `conftest.py` | Adds `src/` to `sys.path` so the `warp_proxy` package imports cleanly in tests |
 | `test_api.py` | Integration coverage for model listing, local chat completions, SSE streaming, namespaced model discovery, environment/skill/MCP passthrough, admin status, and conversation-store error paths |
 | `test_oz_bridge.py` | Unit coverage for parsing helpers, prompt flattening, settings validation, and model catalog parsing |
 | `test_conversation_store.py` | Persistence and corruption tests for the JSON-backed conversation mapping store |
@@ -48,7 +48,7 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 ## Dependencies
 
 ### Internal
-- Imports target `main.py`, `config.py`, `models.py`, `oz_bridge.py`, and `conversation_store.py`
+- Imports target the `warp_proxy` package: `src/warp_proxy/main.py`, `config.py`, `models.py`, `oz_bridge.py`, and `conversation_store.py`
 - `fixtures/oz/` provides captured CLI output for parser and response-shape tests
 
 ### External

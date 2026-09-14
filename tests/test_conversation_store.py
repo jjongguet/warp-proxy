@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from conversation_store import ConversationStore, ConversationStoreError
+from warp_proxy.conversation_store import ConversationStore, ConversationStoreError
 
 
 def test_store_persists_and_reloads(tmp_path: Path) -> None:

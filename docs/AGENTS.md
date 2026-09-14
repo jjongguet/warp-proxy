@@ -46,7 +46,7 @@ Reference documentation for the current local-only proxy: API contract, architec
 ## Dependencies
 
 ### Internal
-- Documents describe `main.py`, `config.py`, `models.py`, `oz_bridge.py`, `conversation_store.py`, and the `tests/` suite
+- Documents describe `src/warp_proxy/` (`main.py`, `config.py`, `models.py`, `oz_bridge.py`, `conversation_store.py`), `run.py`, and the `tests/` suite
 - `IMPLEMENTATION_STATUS.md` and `EVIDENCE.md` reference commands and fixtures from `tests/fixtures/oz/`
 
 ### External

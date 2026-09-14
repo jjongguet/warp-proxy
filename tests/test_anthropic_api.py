@@ -6,10 +6,10 @@ from pathlib import Path
 import httpx
 import pytest
 
-from config import SUPPORTED_WARP_VERSION, Settings
-from conversation_store import ConversationStore
-from main import create_app
-from oz_bridge import CommandResult, DEFAULT_MODEL_ALIAS, OzBridge, ProxyError, parse_event_line
+from warp_proxy.config import SUPPORTED_WARP_VERSION, Settings
+from warp_proxy.conversation_store import ConversationStore
+from warp_proxy.main import create_app
+from warp_proxy.oz_bridge import CommandResult, DEFAULT_MODEL_ALIAS, OzBridge, ProxyError, parse_event_line
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "oz"
 

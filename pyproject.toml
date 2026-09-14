@@ -25,5 +25,5 @@ dev = [
 addopts = "-q"
 testpaths = ["tests"]
 
-[tool.setuptools]
-py-modules = ["main", "config", "models", "oz_bridge", "conversation_store"]
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -37,7 +37,7 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/test_live_oz.py
 ## Dependencies
 
 ### Internal
-- Imports from `../../main.py`, `../../config.py`, and `../../oz_bridge.py`
+- Imports from the `warp_proxy` package (`src/warp_proxy/config.py`, `src/warp_proxy/main.py`, and `src/warp_proxy/oz_bridge.py`)
 
 ### External
 - Requires a working `oz` CLI installation with an active Warp session

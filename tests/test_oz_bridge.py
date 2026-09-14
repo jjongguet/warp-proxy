@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from config import Settings, SUPPORTED_WARP_VERSION
-from models import ChatCompletionRequest
-from oz_bridge import (
+from warp_proxy.config import Settings, SUPPORTED_WARP_VERSION
+from warp_proxy.models import ChatCompletionRequest
+from warp_proxy.oz_bridge import (
     DEFAULT_MODEL_ALIAS,
     aggregate_events,
     flatten_messages,

@@ -9,12 +9,13 @@ A local OpenAI-compatible FastAPI proxy that exposes the logged-in Oz CLI throug
 
 | File | Description |
 |------|-------------|
-| `main.py` | FastAPI app factory and route registration for `/v1/models`, `/admin/status`, and `/v1/chat/completions` |
-| `config.py` | Environment-driven `Settings` dataclass, localhost-only validation, timeout/concurrency settings, and CLI version policy |
-| `models.py` | Pydantic request/response models for chat completions, model listing, admin status, and error envelopes |
-| `oz_bridge.py` | Core local Oz adapter: request validation, model discovery, version probing, CLI command assembly, NDJSON parsing, SSE streaming, and error mapping |
-| `conversation_store.py` | Persistent JSON mapping store from OpenAI-style response IDs to Oz conversation IDs using atomic writes |
-| `pyproject.toml` | Package metadata, runtime dependencies, and pytest configuration |
+| `src/warp_proxy/main.py` | FastAPI app factory and route registration for `/v1/models`, `/admin/status`, and `/v1/chat/completions` |
+| `src/warp_proxy/config.py` | Environment-driven `Settings` dataclass, localhost-only validation, timeout/concurrency settings, and CLI version policy |
+| `src/warp_proxy/models.py` | Pydantic request/response models for chat completions, model listing, admin status, and error envelopes |
+| `src/warp_proxy/oz_bridge.py` | Core local Oz adapter: request validation, model discovery, version probing, CLI command assembly, NDJSON parsing, SSE streaming, and error mapping |
+| `src/warp_proxy/conversation_store.py` | Persistent JSON mapping store from OpenAI-style response IDs to Oz conversation IDs using atomic writes |
+| `requirements.txt` / `requirements-dev.txt` | Pinned-range runtime and dev dependency lists for `pip install -r` users |
+| `pyproject.toml` | Package metadata, `src/` layout setuptools config, dependencies, and pytest configuration |
 | `README.md` | Korean quick start, configuration, curl usage, and client integration guide |
 | `docs/archive/PRD.md` | Initial product requirements and scope notes; historical planning artifact, archived |
 
@@ -50,8 +51,8 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 ## Dependencies
 
 ### Internal
-- `main.py` depends on `config.py`, `models.py`, and `oz_bridge.py`
-- `oz_bridge.py` depends on `config.py`, `models.py`, and `conversation_store.py`
+- `src/warp_proxy/main.py` depends on `config.py`, `models.py`, and `oz_bridge.py` within the package
+- `src/warp_proxy/oz_bridge.py` depends on `config.py`, `models.py`, and `conversation_store.py` within the package
 - `tests/` exercises the public API surface plus parsing and persistence helpers
 - `docs/` is the documentation source of truth for the supported API and current implementation status
 
