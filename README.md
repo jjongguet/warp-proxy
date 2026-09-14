@@ -358,7 +358,8 @@ All configuration is done via environment variables — no config file required.
 | `WARP_PROXY_VERIFIED_WARP_VERSIONS` | *(built-in list)* | Comma-separated allowlist of accepted Warp CLI versions. |
 | `ALLOW_UNVERIFIED_WARP_CLI` | `false` | `true` to skip the CLI version check entirely. |
 | `WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS` | `false` | `true` to ignore unsupported request fields instead of rejecting with 400. `python run.py` defaults this to `true` unless explicitly set. |
-| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Per-request Oz CLI execution timeout (seconds). |
+| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Timeout for short Oz CLI probes (version check, model catalog). |
+| `WARP_PROXY_AGENT_RUN_TIMEOUT_SECONDS` | `900` | Budget for one `oz agent run` (seconds): max silence between NDJSON lines while streaming and total runtime for non-streaming completions. The Oz agent can stay silent for minutes during internal tool work; killing it at 120s surfaces as client-side "stream stalled" errors. |
 | `WARP_PROXY_MAX_CONCURRENT_REQUESTS` | `4` | Max simultaneous Oz CLI processes. |
 | `WARP_PROXY_CWD` | — | Working directory passed to `oz agent run --cwd`. |
 | `WARP_PROXY_ENVIRONMENT` | — | Environment string passed to `oz agent run --environment`. |

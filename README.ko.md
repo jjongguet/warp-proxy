@@ -352,7 +352,8 @@ warp-proxy는 CLIProxyAPI 의 `config.yaml` 에 `openai-compatibility` 또는 `c
 | `WARP_PROXY_VERIFIED_WARP_VERSIONS` | *(내장 목록)* | 허용할 Warp CLI 버전 쉼표 목록. |
 | `ALLOW_UNVERIFIED_WARP_CLI` | `false` | `true` 면 CLI 버전 검사를 완전히 건너뜀. |
 | `WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS` | `false` | `true` 면 미지원 요청 필드를 400 거부 대신 무시. `python run.py` 는 명시 없으면 `true` 로 기동. |
-| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | 요청별 Oz CLI 실행 타임아웃 (초). |
+| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | 짧은 Oz CLI 프로브(버전 확인, 모델 카탈로그) 타임아웃 (초). |
+| `WARP_PROXY_AGENT_RUN_TIMEOUT_SECONDS` | `900` | `oz agent run` 1회 예산 (초). 스트리밍 중 NDJSON 라인 간 최대 침묵 시간이자 논스트리밍 전체 실행 시간. 에이전트 내부 툴 작업 중 수 분간 침묵할 수 있어 120초에 죽이면 클라이언트에서 "stream stalled" 로 터진다. |
 | `WARP_PROXY_MAX_CONCURRENT_REQUESTS` | `4` | 동시 Oz CLI 프로세스 최대 수. |
 | `WARP_PROXY_CWD` | — | `oz agent run --cwd` 로 전달할 작업 디렉터리. |
 | `WARP_PROXY_ENVIRONMENT` | — | `oz agent run --environment` 으로 전달할 환경 문자열. |

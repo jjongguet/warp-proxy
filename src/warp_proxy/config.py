@@ -39,6 +39,7 @@ class Settings:
     ignore_unsupported_fields: bool = False
     verified_warp_versions: tuple[str, ...] = field(default_factory=lambda: (SUPPORTED_WARP_VERSION,))
     command_timeout_seconds: float = 120.0
+    agent_run_timeout_seconds: float = 900.0
     max_concurrent_requests: int = 4
     cwd: str | None = None
     environment: str | None = None
@@ -56,6 +57,8 @@ class Settings:
             raise ValueError("WARP_API_KEY is required when WARP_PROXY_AUTH_MODE=api_key")
         if self.command_timeout_seconds <= 0:
             raise ValueError("WARP_PROXY_COMMAND_TIMEOUT_SECONDS must be positive")
+        if self.agent_run_timeout_seconds <= 0:
+            raise ValueError("WARP_PROXY_AGENT_RUN_TIMEOUT_SECONDS must be positive")
         if self.max_concurrent_requests < 1:
             raise ValueError("WARP_PROXY_MAX_CONCURRENT_REQUESTS must be at least 1")
         if self.cwd:
@@ -88,6 +91,7 @@ class Settings:
                 default=(SUPPORTED_WARP_VERSION,),
             ),
             command_timeout_seconds=float(os.getenv("WARP_PROXY_COMMAND_TIMEOUT_SECONDS", "120")),
+            agent_run_timeout_seconds=float(os.getenv("WARP_PROXY_AGENT_RUN_TIMEOUT_SECONDS", "900")),
             max_concurrent_requests=int(os.getenv("WARP_PROXY_MAX_CONCURRENT_REQUESTS", "4")),
             cwd=_env_optional_str("WARP_PROXY_CWD"),
             environment=_env_optional_str("WARP_PROXY_ENVIRONMENT"),

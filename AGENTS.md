@@ -73,7 +73,8 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 | `WARP_API_KEY` | — | Required when `WARP_PROXY_AUTH_MODE=api_key` |
 | `WARP_PROXY_LIST_ALL_MODELS` | `false` | When `true`, expose discovered namespaced model IDs instead of only the curated set |
 | `WARP_PROXY_VERIFIED_WARP_VERSIONS` | supported version list | Comma-separated allowlist for Warp CLI version validation |
-| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Per-command timeout for Oz CLI subprocess execution |
+| `WARP_PROXY_COMMAND_TIMEOUT_SECONDS` | `120` | Per-command timeout for short Oz CLI probes (version, model catalog) |
+| `WARP_PROXY_AGENT_RUN_TIMEOUT_SECONDS` | `900` | Budget for one `oz agent run`: max NDJSON silence while streaming and total runtime for non-streaming completions. Agent tool work can legitimately stay silent for minutes |
 | `WARP_PROXY_MAX_CONCURRENT_REQUESTS` | `4` | Concurrency limit enforced inside `OzBridge` |
 | `WARP_PROXY_CWD` | — | Existing working directory forwarded to `oz agent run --cwd` |
 | `WARP_PROXY_ENVIRONMENT` | — | Optional Oz environment forwarded to local runs |

@@ -385,7 +385,7 @@ class OzBridge:
         return len(prompt.split())
 
     def _execute_local_chat_completion(self, prepared: PreparedExecution) -> ChatCompletionResponse:
-        result = self._run_sync(prepared.args)
+        result = self._run_sync(prepared.args, timeout=self.settings.agent_run_timeout_seconds)
         if result.returncode != 0:
             raise self._map_backend_failure(result, prior_response_id=prepared.prior_response_id)
         events = parse_ndjson_events(result.stdout)
@@ -614,7 +614,7 @@ class OzBridge:
             assert process.stdout is not None
             while True:
                 try:
-                    line = await asyncio.wait_for(process.stdout.readline(), timeout=self.settings.command_timeout_seconds)
+                    line = await asyncio.wait_for(process.stdout.readline(), timeout=self.settings.agent_run_timeout_seconds)
                 except asyncio.TimeoutError as exc:
                     process.kill()
                     with suppress(ProcessLookupError):
