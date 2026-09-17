@@ -23,7 +23,7 @@ When documents conflict, this precedence order applies:
 **I want to use the proxy →** [`USAGE.md`](./USAGE.md)
 
 **I want to integrate with CLIProxyAPI →** [`CLIPROXYAPI.md`](./CLIPROXYAPI.md)
-**I want to connect GJC (Gajae Code) →** [`gjc-integration.md`](./gjc-integration.md) (English) / [`gjc-integration.ko.md`](./gjc-integration.ko.md) (한국어)
+**I want to connect GJC (Gajae Code) →** [`gjc-integration.md`](./gjc-integration.md) (한국어)
 
 **I want to understand the API surface →** [`API_CONTRACT.md`](./API_CONTRACT.md)
 
@@ -45,7 +45,7 @@ When documents conflict, this precedence order applies:
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Runtime architecture, request lifecycle, streaming flow, version probing |
 | [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md) | Implemented feature matrix and verification snapshot |
 | [`USAGE.md`](./USAGE.md) | Quick start, curl examples, client integration (Claude Code, Codex CLI, Open WebUI, Continue) |
-| [`gjc-integration.md`](./gjc-integration.md) / [`gjc-integration.ko.md`](./gjc-integration.ko.md) | GJC provider + preset integration guide (bilingual) |
+| [`gjc-integration.md`](./gjc-integration.md) | GJC provider + preset integration guide |
 | [`CLIPROXYAPI.md`](./CLIPROXYAPI.md) | CLIProxyAPI integration guide (OpenAI-compatible and Anthropic-compatible modes) |
 | [`DECISIONS.md`](./DECISIONS.md) | Architecture decision records (ADRs) — rationale behind key choices |
 
@@ -59,7 +59,7 @@ For current behavior, refer to the Active Documentation above.
 | File | Purpose |
 |------|---------|
 | [`EVIDENCE.md`](./EVIDENCE.md) | Design rationale, CLI observations, and validation records (including cloud investigation) |
-| [`CLOUD_REMOVED.md`](./CLOUD_REMOVED.md) | Why cloud backend support was removed on 2026-03-09 |
+| [`archive/CLOUD_REMOVED.md`](./archive/CLOUD_REMOVED.md) | Why cloud backend support was removed on 2026-03-09 |
 | [`archive/PRD.md`](./archive/PRD.md) | Original product requirements draft — historical planning artifact |
 
 ---
@@ -68,7 +68,7 @@ For current behavior, refer to the Active Documentation above.
 
 - **Source of truth for API behavior:** `API_CONTRACT.md`
 - **Source of truth for what is implemented:** `IMPLEMENTATION_STATUS.md`
-- **Do not** use `EVIDENCE.md`, `CLOUD_REMOVED.md`, or `archive/PRD.md` as current contracts
+- **Do not** use `EVIDENCE.md` or anything under `archive/` as current contracts
 - **Do not** reintroduce cloud backend support without updating docs, tests, and compatibility notes together
 - When behavior changes, update `API_CONTRACT.md`, `IMPLEMENTATION_STATUS.md`, and `USAGE.md` together
 - See root `AGENTS.md` for codebase-wide conventions and `docs/AGENTS.md` for docs-directory conventions

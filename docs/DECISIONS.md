@@ -2,7 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **Purpose:** 현재 지원되는 아키텍처/제품 방향에 대한 핵심 의사결정을 정리한다.
-- **Note:** 제거된 cloud backend 관련 역사적 맥락은 `docs/CLOUD_REMOVED.md`와 `docs/EVIDENCE.md`에 남긴다.
+- **Note:** 제거된 cloud backend 관련 역사적 맥락은 `docs/archive/CLOUD_REMOVED.md`와 `docs/EVIDENCE.md`에 남긴다.
 
 ## ADR-001 — Primary backend is the Oz CLI, not a separate REST control plane
 - **Status:** Accepted

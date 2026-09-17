@@ -2,7 +2,7 @@
 
 - **Last updated:** 2026-03-09
 - **Purpose:** 현재 설계와 문서가 어떤 근거 위에 서 있는지 정리한다.
-- **Note:** historical cloud investigation은 삭제하지 않고 요약만 유지한다. 현재 supported surface는 local-only이며, cloud 관련 현재 상태는 `docs/CLOUD_REMOVED.md`를 우선한다.
+- **Note:** historical cloud investigation은 삭제하지 않고 요약만 유지한다. 현재 supported surface는 local-only이며, cloud 관련 현재 상태는 `docs/archive/CLOUD_REMOVED.md`를 우선한다.
 
 ## 1. Evidence categories
 
@@ -137,7 +137,7 @@ Historical captures retained in the repo:
 Current interpretation:
 - these artifacts are useful historical evidence,
 - they do **not** define the current supported surface,
-- the removal decision is documented in `docs/CLOUD_REMOVED.md`.
+- the removal decision is documented in `docs/archive/CLOUD_REMOVED.md`.
 
 ## 7. Source links
 

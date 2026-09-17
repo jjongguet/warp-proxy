@@ -55,7 +55,7 @@ The proxy is intentionally narrow: it exposes a small OpenAI-compatible HTTP sur
 - `warp-oz-cli-cloud`
 - any remote/network-exposed binding mode
 
-Cloud support was intentionally removed from the supported surface on **2026-03-09**. Historical notes live in `docs/CLOUD_REMOVED.md` and `docs/EVIDENCE.md`.
+Cloud support was intentionally removed from the supported surface on **2026-03-09**. Historical notes live in `docs/archive/CLOUD_REMOVED.md` and `docs/EVIDENCE.md`.
 
 ## 4. Request lifecycle
 

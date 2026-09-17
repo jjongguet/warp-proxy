@@ -17,7 +17,8 @@ Reference documentation for the current local-only proxy: API contract, architec
 | `CLIPROXYAPI.md` | Integration guide for wiring warptocli into CLIProxyAPI-style OpenAI-compatible setups |
 | `DECISIONS.md` | ADR log and design rationale, including historical choices that may predate later simplifications |
 | `EVIDENCE.md` | Research basis, CLI observations, and validation evidence, including historical cloud investigation records |
-| `CLOUD_REMOVED.md` | Explicit note describing what cloud support was removed and where to recover it from git history if ever needed |
+| `gjc-integration.md` | GJC (Gajae Code) provider and model-preset integration guide (Korean, single source) |
+| `README.md` | Navigation hub for this directory — authority chain and where-to-start routes |
 
 ## Subdirectories
 
@@ -29,7 +30,7 @@ Reference documentation for the current local-only proxy: API contract, architec
 
 ### Working In This Directory
 - Treat `API_CONTRACT.md` as the source of truth for the supported HTTP surface
-- Treat `IMPLEMENTATION_STATUS.md` and `CLOUD_REMOVED.md` as the current implementation reality when older docs disagree
+- Treat `IMPLEMENTATION_STATUS.md` as the current implementation reality when older docs disagree; `archive/CLOUD_REMOVED.md` is historical only
 - Read `DECISIONS.md` and `EVIDENCE.md` as rationale/history documents; some sections intentionally preserve pre-removal cloud context
 - When behavior changes, update the matching contract, status, and usage docs together rather than patching just one file
 - Do not place runnable application code in this directory

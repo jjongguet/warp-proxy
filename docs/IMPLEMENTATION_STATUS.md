@@ -56,7 +56,7 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - local live smoke for non-streaming / streaming / continuation
 - `run.py` entry point with client-compat default (`WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS=true` unless set)
 - curated `/v1/models` lineup refreshed to the current catalog (46 models, dead IDs removed)
-- bilingual docs (English / 한국어) and a GJC integration guide (`docs/gjc-integration.md`)
+- Korean single-source docs (README + GJC integration guide at `docs/gjc-integration.md`)
 
 ## Backend adapter shape
 
@@ -66,7 +66,7 @@ The repository contains a runnable FastAPI implementation with the originally pl
 - `type=agent` text extraction
 - `conversation_started` / `conversation_id` capture
 
-> Cloud backend (`oz agent run-cloud`) has been removed. See [`docs/CLOUD_REMOVED.md`](./CLOUD_REMOVED.md) for details.
+> Cloud backend (`oz agent run-cloud`) has been removed. See [`archive/CLOUD_REMOVED.md`](./archive/CLOUD_REMOVED.md) for details.
 
 ## Verification snapshot
 

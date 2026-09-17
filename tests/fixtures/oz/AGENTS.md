@@ -39,7 +39,7 @@ This directory currently has no child directories that require separate `AGENTS.
 
 ### Internal
 - `tests/test_oz_bridge.py` and `tests/test_api.py` read these fixtures through `pathlib.Path`
-- `docs/EVIDENCE.md` and `docs/CLOUD_REMOVED.md` reference the historical cloud captures
+- `docs/EVIDENCE.md` and `docs/archive/CLOUD_REMOVED.md` reference the historical cloud captures
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
 
