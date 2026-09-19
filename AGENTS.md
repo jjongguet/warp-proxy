@@ -85,9 +85,7 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 | `WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS` | `false` | `true` accepts-and-ignores unsupported request fields instead of rejecting with 400 |
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
-### 운영 포지션 (수동 기록, 2026-09-17 판정)
-
-- **미결**: GJC(`~/.gjc/agent/models.yml`의 `warp-oz` 프로바이더 + 역할 프리셋) 배선은 살아 있으나 warp-proxy 서비스는 중단 상태(포트 29113 무청취).
-- 결정 후보: ① Warp 크레딧 충전 후 재기동(tmux 상주) ② models.yml에서 warp-oz 언와이어링 후 이 리포 아카이브.
-- 이 항목은 결정 시 갱신·삭제한다.
+### 운영 포지션 (수동 기록, 2026-09-20 갱신)
+- **비활성 방치 확정(운영자 결정)**: 서비스를 재기동하지 않고 models.yml 배선·리포도 그대로 둔다. warp-oz 라우팅은 응답하지 않는 로컬 포트로 실패한다(비활성 상태의 알려진 결과).
+- 재기동 조건(선택): Warp 앱에서 크레딧 충전 → tmux 세션 재상주 → `/v1/models` 검증. 이 항목은 재기동 또는 언와이어링 결정 시 다시 갱신한다.
 
