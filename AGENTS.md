@@ -85,7 +85,7 @@ RUN_LIVE_OZ_SMOKE=1 pytest -q tests/smoke/
 | `WARP_PROXY_IGNORE_UNSUPPORTED_FIELDS` | `false` | `true` accepts-and-ignores unsupported request fields instead of rejecting with 400 |
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
-### 운영 포지션 (수동 기록, 2026-09-20 갱신)
-- **비활성 방치 확정(운영자 결정)**: 서비스를 재기동하지 않고 models.yml 배선·리포도 그대로 둔다. warp-oz 라우팅은 응답하지 않는 로컬 포트로 실패한다(비활성 상태의 알려진 결과).
-- 재기동 조건(선택): Warp 앱에서 크레딧 충전 → tmux 세션 재상주 → `/v1/models` 검증. 이 항목은 재기동 또는 언와이어링 결정 시 다시 갱신한다.
+### 운영 포지션 (수동 기록, 2026-09-26 갱신)
+- **보관(운영자 결정)**: 현재 미기동. models.yml 배선·리포는 그대로 보존한다.
+- 기동 여부는 필요해졌을 때 그때 정한다 — 의무·예정 전제 없음. 그때 기동 절차를 이 항목에 다시 정리한다.
 
